@@ -1,0 +1,4 @@
+module: dhoppe/monit
+version: 0.0.19
+url: file:///var/lib/puppet/puppet-module/cache/http_forge_puppetlabs_com-75a31f1d6f1ef6eb63b4479b3512ee1508209a7f/dhoppe-monit-0.0.19.tar.gz
+installed: Tue May 08 10:06:47 +0200 2012

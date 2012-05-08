@@ -1,0 +1,11 @@
+name    'hyc/firewall'
+version '0.0.1'
+source 'UNKNOWN'
+author 'hyc'
+license 'Copyright'
+summary 'Firewall Xen'
+description 'UNKNOWN'
+project_page 'http://www.hostyourcreeper.com/'
+
+## Add dependencies, if any:
+# dependency 'username/name', '>= 1.2.0'
