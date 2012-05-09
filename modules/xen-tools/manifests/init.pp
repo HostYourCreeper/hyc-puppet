@@ -34,14 +34,14 @@ class xen-tools {
       mode    => 0644,
       source  => 'puppet:///xen-tools/nginx.d',
       recurse => true,
-      require => File['/etc/xen-tools/xen-tools.con'],
+      require => File['/etc/xen-tools/xen-tools.conf'],
     }
     file {'/etc/xen-tools/minecraft.d':
       ensure  => directory,
       mode    => 0644,
       source  => 'puppet:///xen-tools/minecraft.d',
       recurse => true,
-      require => File['/etc/xen-tools/xen-tools.con'],
+      require => File['/etc/xen-tools/xen-tools.conf'],
     }
     file {'/etc/xen-tools/role.d':
       ensure  => directory,
@@ -49,6 +49,6 @@ class xen-tools {
       source  => 'puppet:///xen-tools/role.d',
       recurse => true,
       purge   => false,
-      require => File['/etc/xen-tools/xen-tools.con'],
+      require => File['/etc/xen-tools/xen-tools.conf'],
     }
 }
