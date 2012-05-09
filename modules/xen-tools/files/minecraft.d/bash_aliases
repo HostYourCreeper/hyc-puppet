@@ -1,0 +1,6 @@
+alias bukkit='/etc/init.d/bukkit'
+alias bk='/etc/init.d/bukkit'
+alias minecraft='/etc/init.d/minecraft'
+alias mc='/etc/init.d/minecraft'
+alias gohome='cd $HOME/minecraft'
+alias murmur='/etc/init.d/murmur'

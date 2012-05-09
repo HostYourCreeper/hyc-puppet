@@ -1,0 +1,72 @@
+#!/bin/sh
+#
+#  Configure the new image to be a minimal image, by removing
+# packages I don't care about - and installing new ones I prefer.
+#
+# Steve
+# --
+# http://www.steve.org.uk/
+#
+
+prefix=$1
+NODE=$2
+
+#
+#  Source our common functions - this will let us install a Debian package.
+#
+if [ -e /usr/lib/xen-tools/common.sh ]; then
+    . /usr/lib/xen-tools/common.sh
+else
+    echo "Installation problem"
+fi
+
+if [ -e /etc/xen-tools/role.d/minimal ]; then
+    . /etc/xen-tools/role.d/minimal
+else
+    echo "Installation problem"
+fi
+
+logMessage Script $0 starting
+
+installDebianPackage ${prefix} bzip2
+installDebianPackage ${prefix} rsync
+installDebianPackage ${prefix} htop
+
+logMessage Adding ssh keys
+
+mkdir -p "${prefix}/root/.ssh"
+touch "${prefix}/root/.ssh/authorized_keys2"
+cat /etc/xen-tools/key.d/*.pub > "${prefix}/root/.ssh/authorized_keys2"
+
+logMessage Changing bashrc
+
+sed -i '9,+4 s/^# //g' "${prefix}/root/.bashrc"
+
+logMessage Installation du serveur LAMP
+
+installDebianPackage ${prefix} nginx
+
+mv "${prefix}/etc/nginx/nginx.conf" "${prefix}/etc/nginx/nginx.conf.orig"
+cp /etc/xen-tools/nginx.d/nginx.conf "${prefix}/etc/nginx/nginx.conf"
+cp /etc/xen-tools/nginx.d/proxy.conf "${prefix}/etc/nginx/conf.d/proxy.conf"
+rm -f "${prefix}/etc/nginx/sites-enabled/default"
+cp /etc/xen-tools/nginx.d/hyc "${prefix}/etc/nginx/sites-enabled/hyc"
+cp /etc/xen-tools/nginx.d/default "${prefix}/etc/nginx/sites-enabled/default"
+mkdir -p "${prefix}/usr/local/nginx/html"
+chown -R www-data:www-data "${prefix}/var/log/nginx/"
+mkdir -p "${prefix}/var/www"
+cp /etc/xen-tools/nginx.d/index.html "${prefix}/var/www/index.html"
+chown -R www-data:www-data "${prefix}/var/www"
+
+logMessage Installation du cache DNS
+
+installDebianPackage ${prefix} dnsmasq
+sed -i 's/#listen-address=/listen-address=127.0.0.1/g' "${prefix}/etc/dnsmasq.conf"
+sed -i '1isearch nginx' "${prefix}/etc/resolv.conf"
+for i in `seq 10 99`;
+do
+	echo "10.10.10.${i} server0${i}.hyc${NODE}.hostyourcreeper.net" >> "${prefix}/etc/hosts"
+done    
+
+logMessage Script $0 ending
+

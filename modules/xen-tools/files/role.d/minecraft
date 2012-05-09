@@ -1,0 +1,160 @@
+#!/bin/sh
+#
+#  Configure the new image to be a minimal image, by removing
+# packages I don't care about - and installing new ones I prefer.
+#
+# Steve
+# --
+# http://www.steve.org.uk/
+#
+
+prefix=$1
+PASSWORD=$2
+MEMORY=$3
+SHARED=$4
+#MAXMEM=$(($(echo $MEMORY | sed 's/M//') + $SHARED - 256))M
+MAXMEM=${MEMORY}M
+DOMU_IP=$5
+BACKUP=$6
+DB_PASSWORD=$7
+MURMUR_PASSWORD=$8
+SSH=$9
+
+#
+#  Source our common functions - this will let us install a Debian package.
+#
+if [ -e /usr/lib/xen-tools/common.sh ]; then
+    . /usr/lib/xen-tools/common.sh
+else
+    echo "Installation problem"
+fi
+
+if [ -e /etc/xen-tools/role.d/minimal ]; then
+    . /etc/xen-tools/role.d/minimal
+else
+    echo "Installation problem"
+fi
+
+logMessage Script $0 starting
+
+installDebianPackage ${prefix} bzip2
+installDebianPackage ${prefix} unzip
+installDebianPackage ${prefix} unrar-free
+installDebianPackage ${prefix} curl
+installDebianPackage ${prefix} man
+installDebianPackage ${prefix} rsync
+installDebianPackage ${prefix} locate
+installDebianPackage ${prefix} debconf-utils
+chroot ${prefix} debconf-set-selections <<\EOF
+sun-java6-bin shared/accepted-sun-dlj-v1-1 boolean true
+EOF
+installDebianPackage ${prefix} sun-java6-jre
+
+logMessage Monitoring
+
+installDebianPackage ${prefix} htop
+
+logMessage Installation du serveur sftpd
+
+installDebianPackage ${prefix} vsftpd
+
+sed -i 's/anonymous_enable=YES/#anonymous_enable=YES/g' "${prefix}/etc/vsftpd.conf"
+sed -i 's/#local_enable=YES/local_enable=YES/g' "${prefix}/etc/vsftpd.conf"
+sed -i 's/#write_enable=YES/write_enable=YES/g' "${prefix}/etc/vsftpd.conf"
+sed -i 's/#chroot_local_user=YES/chroot_local_user=YES/g' "${prefix}/etc/vsftpd.conf"
+
+logMessage Adding Minecraft User
+
+chroot ${prefix} useradd -s /bin/bash -m -p ${PASSWORD} minecraft
+
+touch "${prefix}/etc/cron.deny"
+echo "minecraft" >> "${prefix}/etc/cron.deny"
+echo "*/5 * * * * root if [ -e /home/minecraft/minecraft/autostart ]; then /etc/init.d/minecraft start; fi" >> "${prefix}/etc/cron.d/minecraft"
+if [[ $SSH != 1 ]]
+then
+	echo "DenyUsers minecraft" >> "${prefix}/etc/ssh/sshd_config"
+	chroot ${prefix} /etc/init.d/ssh reload
+fi
+
+logMessage Installation des backups
+
+case "$BACKUP" in
+ 0) 
+ 	echo "0 6 * * 1 root /etc/init.d/minecraft backup" >> "${prefix}/etc/cron.d/minecraft"
+ ;;
+ 1) 
+ 	echo "0 6 * * * root /etc/init.d/minecraft backup" >> "${prefix}/etc/cron.d/minecraft"
+ ;;
+ 2)
+ 	echo "0 */6 * * * root /etc/init.d/minecraft backup" >> "${prefix}/etc/cron.d/minecraft"
+ ;;
+esac
+
+logMessage Installation du serveur LAMP
+
+installDebianPackage ${prefix} apache2
+installDebianPackage ${prefix} php5
+installDebianPackage ${prefix} libapache2-mod-php5
+installDebianPackage ${prefix} libapache2-mod-rpaf
+installDebianPackage ${prefix} mysql-server
+installDebianPackage ${prefix} mysql-client
+installDebianPackage ${prefix} php5-mysql
+chroot ${prefix} /etc/init.d/mysql start
+installDebianPackage ${prefix} phpmyadmin
+chroot ${prefix} ln -s /etc/phpmyadmin/apache.conf /etc/apache2/conf.d/phpmyadmin.conf
+echo "UPDATE mysql.user SET Password=PASSWORD('${DB_PASSWORD}') WHERE User='root';" | chroot ${prefix} mysql -uroot
+echo "FLUSH PRIVILEGES;" | chroot ${prefix} mysql -uroot
+chroot ${prefix} /etc/init.d/mysql stop
+
+cp /etc/xen-tools/minecraft.d/apache "${prefix}/etc/apache2/sites-available/minecraft"
+mkdir -p "${prefix}/home/minecraft/www"
+touch "${prefix}/home/minecraft/www/index.html"
+chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft/www"
+sed -i "s/127.0.0.1/10.10.10.1/g" "${prefix}/etc/apache2/mods-enabled/rpaf.conf"
+sed -i "s/www-data/minecraft/g" "${prefix}/etc/apache2/envvars"
+chroot ${prefix} a2dissite default
+chroot ${prefix} a2ensite minecraft
+chroot ${prefix} /etc/init.d/apache2 stop
+
+logMessage Installation du serveur Murmur
+
+cp -R /etc/xen-tools/minecraft.d/murmur-static_x86-1.2.3 "${prefix}/home/minecraft/murmur"
+chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft/murmur"
+cp /etc/xen-tools/minecraft.d/murmur "${prefix}/etc/init.d/murmur"
+chmod a+x "${prefix}/etc/init.d/murmur"
+chroot ${prefix} insserv murmur
+chroot ${prefix} /home/minecraft/murmur/murmur.x86 -supw $MURMUR_PASSWORD
+
+logMessage Adding ssh keys
+
+mkdir -p "${prefix}/root/.ssh"
+touch "${prefix}/root/.ssh/authorized_keys2"
+cat /etc/xen-tools/key.d/*.pub > "${prefix}/root/.ssh/authorized_keys2"
+
+logMessage Changing motd
+
+rm "${prefix}/etc/motd"
+cp /etc/xen-tools/minecraft.d/motd "${prefix}/etc/motd.tail"
+
+logMessage Changing bashrc
+
+sed -i '9,+4 s/^# //g' "${prefix}/root/.bashrc"
+sed -i '81,+2 s/^#//g' "${prefix}/home/minecraft/.bashrc"
+cp /etc/xen-tools/minecraft.d/bash_aliases "${prefix}/home/minecraft/.bash_aliases"
+echo /etc/xen-tools/minecraft.d/bash_aliases >> "${prefix}/root/.bash_aliases"
+
+logMessage Add Minecraft Script
+
+cp /etc/xen-tools/minecraft.d/minecraft "${prefix}/etc/init.d/minecraft"
+chmod a+x "${prefix}/etc/init.d/minecraft"
+
+echo "MAXMEM=$MAXMEM" >> "${prefix}/etc/default/minecraft"
+echo "SERVICE_NAME=craftbukkit" >> "${prefix}/home/minecraft/.minecraft"
+
+chroot ${prefix} su - minecraft -c "/etc/init.d/minecraft install"
+chroot ${prefix} su - minecraft -c "/etc/init.d/minecraft autostart-on"
+
+chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft"
+
+logMessage Script $0 ending
+

@@ -1,0 +1,15 @@
+
+Pour administrer le serveur il faut utiliser l'outil suivant :
+minecraft
+
+Pour voir la liste des commandes :
+minecraft help - si vous souhaitez utiliser Minecraft
+murmur - pour administrer votre serveur Mumble
+
+Pour vous rendre dans le dossier de minecraft:
+gohome
+
+Attention:
+- Il ne faut pas modifier le server-port et server-ip du server.properties.
+- Si vous mettez à jour votre serveur, veillez à mettre à jour vos plugins.
+- Si vous souhaitez utiliser un .jar différent, il faut passer par le site.

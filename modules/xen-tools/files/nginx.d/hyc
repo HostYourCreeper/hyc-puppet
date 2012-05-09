@@ -1,0 +1,34 @@
+server {
+    listen   80;
+    server_name "~^monit.hyc(\d{3})\.hostyourcreeper\.net$";
+    access_log /var/log/nginx/access.monit.log;
+    location / {
+        proxy_pass http://10.10.10.128:2812;
+        proxy_set_header Host $host;
+    }
+}
+
+server {
+    listen   80;
+    server_name ~^(.*)\.(.*)\.hostyourcreeper\.net$;
+    resolver_timeout 5s;
+    resolver 127.0.0.1;
+    set $domain $host;
+    if ( $domain ~ "^(.*)\.(.*)\.hostyourcreeper\.net$") {
+        set $domain $1;
+    }
+    access_log  /var/log/nginx/access.$domain.log;
+    location / {
+        proxy_pass      http://$host;
+        proxy_set_header Host $host;
+    }
+}
+
+server {
+    listen   80;
+    server_name "~^hyc(\d{3})\.hostyourcreeper\.net$";
+    access_log /var/log/nginx/access.log;
+    location / {
+        root /var/www;
+    }
+}
