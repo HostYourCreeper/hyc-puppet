@@ -19,6 +19,7 @@ class firewall {
     file {'/opt/firewall/vm':
       ensure  => directory,
       mode    => 0644,
+      purge   => false,
       require => File['/opt/firewall'],
     }
     file {'firewall.sh':
