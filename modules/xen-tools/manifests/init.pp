@@ -25,8 +25,9 @@ class xen-tools {
       require => Package['xen-hypervisor-4.0-amd64'],
     }
     file {'/etc/xen-tools/xen-tools.conf':
-      ensure  => directory,
+      ensure  => file,
       mode    => 0644,
+      source  => 'puppet:///xen-tools/xen-tools.conf',
       require => Package['xen-tools'],
     }
     file {'/etc/xen-tools/nginx.d':
