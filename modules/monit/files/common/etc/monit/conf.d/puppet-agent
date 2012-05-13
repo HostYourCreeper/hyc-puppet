@@ -6,5 +6,5 @@
 check process puppet-agent with pidfile /var/run/puppet/agent.pid
   start program = "/etc/init.d/puppet start"
   stop program = "/etc/init.d/puppet stop"
-  if failed port 8139 then restart
+#  if failed port 8139 then restart
   if 5 restarts within 5 cycles then timeout
