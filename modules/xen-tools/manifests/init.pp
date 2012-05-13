@@ -46,7 +46,7 @@ class xen-tools {
     }
     file {'/etc/xen-tools/role.d':
       ensure  => directory,
-      mode    => 0644,
+      mode    => 0755,
       source  => 'puppet:///xen-tools/role.d',
       recurse => true,
       purge   => false,
