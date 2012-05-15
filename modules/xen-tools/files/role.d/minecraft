@@ -120,6 +120,9 @@ logMessage Installation du serveur Murmur
 
 cp -R /etc/xen-tools/minecraft.d/murmur-static_x86-1.2.3 "${prefix}/home/minecraft/murmur"
 chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft/murmur"
+chmod a+x "${prefix}/home/minecraft/murmur/murmur.x86"
+chmod a+x "${prefix}/home/minecraft/murmur/murmur.pl"
+chmod a+x "${prefix}/home/minecraft/murmur/weblist.pl"
 cp /etc/xen-tools/minecraft.d/murmur "${prefix}/etc/init.d/murmur"
 chmod a+x "${prefix}/etc/init.d/murmur"
 chroot ${prefix} insserv murmur
