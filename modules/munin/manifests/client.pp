@@ -33,9 +33,9 @@ class munin::client {
 				guest: { include munin::plugins::vserver }
 				default: {
 					include munin::plugins::linux
-					case $virtual {
+#					case $virtual {
 #						xen0: { include munin::plugins::xen }
-					}
+#					}
 				}
 			}
 		}
