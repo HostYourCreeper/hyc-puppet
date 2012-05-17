@@ -12,6 +12,15 @@
 #
 # [Remember: No empty lines between comments and class definition]
 class xen-tools {
+    package { 'nmap':
+      ensure => latest,
+    }
+    package { 'htop':
+      ensure => latest,
+    }
+    package { 'pwgen':
+      ensure => latest,
+    }
     package { 'xen-hypervisor-4.0-amd64':
       ensure => latest,
     }
