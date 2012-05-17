@@ -19,9 +19,10 @@ class xen-tools {
       ensure => latest,
       require => Package['xen-hypervisor-4.0-amd64'],
     }
-    file {'/etc/xen/xend-config.xsp':
-      ensure => directory,
+    file {'/etc/xen/xend-config.sxp':
+      ensure => file,
       mode   => 0644,
+      source => 'puppet:///xen-tools/xend-config.sxp',
       require => Package['xen-hypervisor-4.0-amd64'],
     }
     file {'/etc/xen-tools/xen-tools.conf':
