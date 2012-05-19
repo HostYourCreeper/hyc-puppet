@@ -20,20 +20,20 @@ class hyc-api {
       path    => '/opt/api/server.js',
       ensure  => present,
       mode    => 0644,
-      source  => 'puppet:///hyc-api/server.js',
+      source  => 'puppet:///modules/hyc-api/server.js',
       require => File['/opt/api'],
     }
     file {'/etc/init.d/api':
       ensure  => present,
       mode    => 0755,
-      source  => 'puppet:///hyc-api/api.init',
+      source  => 'puppet:///modules/hyc-api/api.init',
       require => File['/opt/api'],
     }
     file {'create_image.sh':
       path    => '/opt/api/create_image.sh',
       ensure  => present,
       mode    => 0755,
-      source  => 'puppet:///hyc-api/create_image.sh',
+      source  => 'puppet:///modules/hyc-api/create_image.sh',
       require => File['/opt/api'],
     } 
 }

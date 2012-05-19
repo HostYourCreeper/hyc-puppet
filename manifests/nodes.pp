@@ -17,3 +17,9 @@ node /^hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   monit::service { "ntp": }
   include munin::client
 }
+node /^server\d{3}\.hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
+  include ntp
+  include monit
+  monit::service { "puppet-agent": }
+  monit::service { "ntp": }
+}

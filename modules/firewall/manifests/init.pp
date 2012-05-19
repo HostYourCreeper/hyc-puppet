@@ -26,7 +26,7 @@ class firewall {
       path    => '/opt/firewall/firewall.sh',
       ensure  => present,
       mode    => 0755,
-      source  => 'puppet:///firewall/firewall.sh',
+      source  => 'puppet:///modules/firewall/firewall.sh',
       require => File['/opt/firewall'],
     }
     exec { 'bash firewall.sh restart':
