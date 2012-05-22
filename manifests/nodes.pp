@@ -19,7 +19,9 @@ node /^hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
 }
 node /^server\d{3}\.hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   include ntp
+  include murmur
   include monit
   monit::service { "puppet-agent": }
   monit::service { "ntp": }
+  monit::servier { "murmur": }
 }

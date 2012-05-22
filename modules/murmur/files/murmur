@@ -1,0 +1,55 @@
+### BEGIN INIT INFO
+# Provides: Murmur Server Installation
+# Required-Start: $local_fs $network
+# Required-Stop: $local_fs $remote_fs
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Voice Chat Service
+# Description: Murmur is an open source Voice Chat Server for Gamers
+### END INIT INFO
+#! /bin/sh
+# /etc/init.d/murmur
+MURMURDIR=/home/minecraft/murmur
+MURMURBIN=$MURMURDIR/murmur.x86
+MURMURINI=$MURMURDIR/murmur.ini
+USERNAME=minecraft
+ME=$(whoami)
+
+as_user() {
+    if [[ $ME -eq $USERNAME ]] ; then
+        bash -c "$1"
+    else
+        su - $USERNAME -c "$1"
+    fi
+}
+
+case "$1" in
+ start)
+    if [ -x $MURMURBIN ] ; then
+      echo "Starting script murmur"
+      as_user "$MURMURBIN -ini $MURMURINI"
+    else
+      echo "$MURMURBIN not installed"
+    fi
+    ;;
+ stop)
+    echo "Stopping script murmur"
+    as_user "pkill murmur.x86 2>/dev/null"
+    ;;
+ restart)
+    echo "Restarting script murmur"
+    as_user "pkill murmur.x86 2>/dev/null"
+    sleep 1
+    if [ -x $MURMURBIN ] ; then
+        echo "Loading murmur..."
+        as_user "$MURMURBIN -ini $MURMURINI"
+    else
+        echo "$MURMURBIN not installed"
+    fi
+    ;;
+ *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+exit 0
