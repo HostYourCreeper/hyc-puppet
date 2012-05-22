@@ -31,7 +31,7 @@ class murmur {
     ensure  => present,
     owner   => 'minecraft',
     group   => 'minecraft',
-    mode    => 644,
+    mode    => 660,
     require => File['/home/minecraft/murmur'],
   }
 
