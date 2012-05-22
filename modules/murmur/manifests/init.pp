@@ -45,7 +45,7 @@ class murmur {
   }
 
   service { 'murmur':
-    ensure     => running,
+#    ensure     => running,
     enable     => true,
     hasrestart => true,
     hasstatus  => false,
