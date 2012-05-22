@@ -27,6 +27,14 @@ class murmur {
     require => File['/home/minecraft/murmur'],
   }  
 
+  file { '/home/minecraft/murmur/murmur.log':
+    ensure  => present,
+    owner   => 'minecraft',
+    group   => 'minecraft',
+    mode    => 644,
+    require => File['/home/minecraft/murmur'],
+  }
+
   file { '/etc/init.d/murmur':
     source  => 'puppet:///modules/murmur/murmur',
     ensure  => file,
