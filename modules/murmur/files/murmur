@@ -16,7 +16,7 @@ USERNAME=minecraft
 ME=$(whoami)
 
 as_user() {
-    if [[ $ME -eq $USERNAME ]] ; then
+    if [[ $ME = $USERNAME ]] ; then
         bash -c "$1"
     else
         su - $USERNAME -c "$1"
