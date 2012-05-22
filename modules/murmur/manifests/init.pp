@@ -41,7 +41,7 @@ class murmur {
     enable     => true,
     hasrestart => true,
     hasstatus  => false,
-    path       => "/etc/init.d/murmur",
+    path       => "/etc/init.d",
     require    => File['/etc/init.d/murmur'],
   }
 }
