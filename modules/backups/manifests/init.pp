@@ -10,7 +10,7 @@ class backups {
     age     => "2w",
     recurse => true,
     matches => [ "*" ],
-    rmdirs  => false,
+    rmdirs  => true,
   }
 
 }
