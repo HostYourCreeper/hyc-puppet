@@ -60,7 +60,7 @@ sed -i "2 s/.*/10.10.10.${NUM} $FQDN $(cat ${prefix}/etc/hostname)/" ${prefix}/e
 installDebianPackage ${prefix} lsb-release 
 installDebianPackage ${prefix} puppet
 echo "server=creeper.emilienkenler.com
-certname=$FQDN" >> ${prefix}/etc/puppet/puppet.con
+certname=$FQDN" >> ${prefix}/etc/puppet/puppet.conf
 
 logMessage Installation du serveur sftpd
 
