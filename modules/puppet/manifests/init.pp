@@ -11,7 +11,7 @@ class puppet {
       require => Package['augeas-tools'],
     }
     augeas{"puppet.default" :
-      context => "/etc/default/puppet",
+      context => "/files/etc/default/puppet",
       changes => "set START no",
       require => Package['augeas-tools'],
     }
