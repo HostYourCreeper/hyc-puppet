@@ -5,6 +5,7 @@ $munin_cidr_allow = '188.165.47.98/32'
 
 node basenode {
   include ssh
+  include puppet
 }
 node /^hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   include firewall
