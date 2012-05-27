@@ -54,6 +54,26 @@ class xen-tools {
       recurse => true,
       require => File['/etc/xen-tools/xen-tools.conf'],
     }
+    file { '/etc/xen-tools/minecraft.d/murmur-static_x86':
+      ensure  => directory,
+      purge   => false,
+      recurse => true,
+      source  => 'puppet:///modules/murmur/murmur-static_x86/',
+      mode    => 0644,
+      require => File['/etc/xen-tools/minecraft.d'],
+    }
+    file { '/etc/xen-tools/minecraft.d/murmur':
+      ensure  => file,
+      source  => 'puppet:///modules/murmur/murmur',
+      mode    => 0644,
+      require => File['/etc/xen-tools/minecraft.d'],
+    }
+    file { '/etc/xen-tools/minecraft.d/minecraft':
+      ensure  => file,
+      source  => 'puppet:///modules/minecraft/minecraft',
+      mode    => 0644,
+      require => File['/etc/xen-tools/minecraft.d'],
+    }
     file {'/etc/xen-tools/role.d':
       ensure  => directory,
       mode    => 0755,

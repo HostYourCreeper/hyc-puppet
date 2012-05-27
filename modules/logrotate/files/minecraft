@@ -1,15 +1,15 @@
 /home/minecraft/minecraft/*.log {
-	daily
-	missingok
-	rotate 7 
-	compress
-	delaycompress
-	notifempty
-	create 640 minecraft minecraft 
-	sharedscripts
-	postrotate
-		touch /home/minecraft/minecraft/server.log > /dev/null
-                chown minecraft:mineraft /home/minecraft/minecraft/server.log > /dev/null
-	endscript
+  daily
+  missingok
+  rotate 7 
+  compress
+  delaycompress
+  notifempty
+  create 640 minecraft minecraft 
+  sharedscripts
+  postrotate
+    touch /home/minecraft/minecraft/server.log > /dev/null
+    chown minecraft:mineraft /home/minecraft/minecraft/server.log > /dev/null
+    endscript
 }
 

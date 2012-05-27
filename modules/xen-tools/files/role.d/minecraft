@@ -127,7 +127,7 @@ chroot ${prefix} /etc/init.d/apache2 stop
 
 logMessage Installation du serveur Murmur
 
-cp -R /etc/xen-tools/minecraft.d/murmur-static_x86-1.2.3 "${prefix}/home/minecraft/murmur"
+cp -R /etc/xen-tools/minecraft.d/murmur-static_x86 "${prefix}/home/minecraft/murmur"
 chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft/murmur"
 chmod a+x "${prefix}/home/minecraft/murmur/murmur.x86"
 chmod a+x "${prefix}/home/minecraft/murmur/murmur.pl"
