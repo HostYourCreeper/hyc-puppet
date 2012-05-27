@@ -12,7 +12,7 @@ class puppet {
     }
     augeas{"puppet.default" :
       context => "/files/etc/default/puppet",
-      changes => "set START no",
+      changes => "set START yes",
       require => Package['augeas-tools'],
     }
     service { 'puppet':
