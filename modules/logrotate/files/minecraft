@@ -9,7 +9,7 @@
   sharedscripts
   postrotate
     touch /home/minecraft/minecraft/server.log > /dev/null
-    chown minecraft:mineraft /home/minecraft/minecraft/server.log > /dev/null
+    chown minecraft:minecraft /home/minecraft/minecraft/server.log > /dev/null
     endscript
 }
 
