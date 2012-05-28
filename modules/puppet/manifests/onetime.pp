@@ -5,8 +5,7 @@ class puppet::onetime inherits puppet{
     require => Package['augeas-tools'],
   }
   service { 'puppet':
-    ensure          => running,
-    hasrestart      => false,
+    ensure          => stopped,
     require         => Augeas['puppet.default'],
   }
   cron { 'puppet-agent':
