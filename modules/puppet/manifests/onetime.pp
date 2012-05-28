@@ -1,7 +1,7 @@
 class puppet::onetime inherits puppet{
   augeas{"puppet.default" :
     context => "/files/etc/default/puppet",
-    changes => "set START false",
+    changes => "set START no",
     require => Package['augeas-tools'],
   }
   service { 'puppet':
@@ -13,5 +13,6 @@ class puppet::onetime inherits puppet{
     command => "/usr/bin/puppet agent --onetime",
     user => root,
     hour => '*/3',
+    minute => 0,
   }
 }
