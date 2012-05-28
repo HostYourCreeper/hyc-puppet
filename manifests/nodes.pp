@@ -5,13 +5,13 @@ $munin_cidr_allow = '188.165.47.98/32'
 
 node basenode {
   include ssh
-  include puppet
 }
 node /^hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   include firewall
   include xen-tools
   include hyc-api
   include ntp
+  include puppet::daemon
   include monit
   monit::service { "api": }
   monit::service { "puppet-agent": }
@@ -22,6 +22,7 @@ node /^server\d{3}\.hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   include ntp
   include murmur
   include backups
+  include puppet::onetime
   include monit
   include minecraft
   monit::service { "puppet-agent": }
