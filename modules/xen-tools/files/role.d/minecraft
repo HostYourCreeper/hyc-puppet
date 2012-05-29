@@ -38,6 +38,7 @@ fi
 logMessage Script $0 starting
 
 installDebianPackage ${prefix} bzip2
+installDebianPackage ${prefix} zip
 installDebianPackage ${prefix} unzip
 installDebianPackage ${prefix} unrar-free
 installDebianPackage ${prefix} curl
@@ -121,6 +122,7 @@ touch "${prefix}/home/minecraft/www/index.html"
 chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft/www"
 sed -i "s/127.0.0.1/10.10.10.1/g" "${prefix}/etc/apache2/mods-enabled/rpaf.conf"
 sed -i "s/www-data/minecraft/g" "${prefix}/etc/apache2/envvars"
+chroot ${prefix} a2enmod rewrite
 chroot ${prefix} a2dissite default
 chroot ${prefix} a2ensite minecraft
 chroot ${prefix} /etc/init.d/apache2 stop
