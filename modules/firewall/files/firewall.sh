@@ -53,6 +53,10 @@ start(){
 		# SSH 2XX22 -> 22
 		iptables -t nat -A PREROUTING -i eth0 -p tcp -m tcp --dport 2${NUM}22 -j DNAT --to-destination 10.10.10.${NUM}:22
 		iptables -t nat -A PREROUTING -d ${IP}/32 -p tcp -m tcp --dport 2${NUM}22 -j DNAT --to-destination 10.10.10.${NUM}:22
+
+                # Munin 149XX -> 4949
+                iptables -t nat -A PREROUTING -i eth0 -p tcp -m tcp --dport 149${NUM} -j DNAT --to-destination 10.10.10.${NUM}:4949
+                iptables -t nat -A PREROUTING -d ${IP}/32 -p tcp -m tcp --dport 149${NUM} -j DNAT --to-destination 10.10.10.${NUM}:4949
 	done
 }
 stop(){
