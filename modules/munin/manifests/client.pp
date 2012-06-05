@@ -32,7 +32,7 @@ class munin::client {
 			case $vserver {
 				guest: { include munin::plugins::vserver }
 				default: {
-					include munin::plugins::linux
+#					include munin::plugins::linux
 #					case $virtual {
 #						xen0: { include munin::plugins::xen }
 #					}
