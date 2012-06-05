@@ -52,4 +52,10 @@ class murmur {
     path       => "/etc/init.d",
     require    => File['/etc/init.d/murmur'],
   }
+
+  exec { 'insserv murmur':
+    subscribe => File["/home/minecraft/murmur/murmur.x86"],
+    path => "/usr/sbin",
+    refreshonly => true
+  }
 }

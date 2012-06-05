@@ -11,6 +11,7 @@ node /^hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   include xen-tools
   include hyc-api
   include ntp
+  include puppet::daemon
   include monit
   monit::service { "api": }
   monit::service { "puppet-agent": }
@@ -28,7 +29,10 @@ node /^hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
 node /^server\d{3}\.hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   include ntp
   include murmur
+  include backups
+  include puppet::onetime
   include monit
+  include minecraft
   monit::service { "puppet-agent": }
   monit::service { "ntp": }
   include munin:client
