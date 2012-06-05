@@ -35,7 +35,7 @@ node /^server\d{3}\.hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   include minecraft
   monit::service { "puppet-agent": }
   monit::service { "ntp": }
-  include munin:client
+  include munin::client
   munin::plugin { df: }
   munin::plugin { df_abs: }
   munin::plugin { netstat: }
