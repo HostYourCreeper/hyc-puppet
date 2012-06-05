@@ -17,12 +17,12 @@ class munin::client {
 		darwin: { include munin::client::darwin }
 		debian: {
 			include munin::client::debian
-			include munin::plugins::debian
+#			include munin::plugins::debian
 		}
 		ubuntu: {
 			info ( "Trying to configure Ubuntu's munin with Debian class" )
 			include munin::client::debian
-			include munin::plugins::debian
+#			include munin::plugins::debian
 		}
 		default: { fail ("Don't know how to handle munin on $operatingsystem") }
 	}
