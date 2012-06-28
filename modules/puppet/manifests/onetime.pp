@@ -9,6 +9,7 @@ class puppet::onetime inherits puppet{
     require         => Augeas['puppet.default'],
   }
   cron { 'puppet-agent':
+    ensure => absent,
     command => "/usr/bin/puppet agent --onetime",
     user => root,
     hour => '*/3',

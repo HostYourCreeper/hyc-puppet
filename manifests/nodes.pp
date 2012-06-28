@@ -31,7 +31,7 @@ node /^server\d{3}\.hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   include murmur
   include backups
   include puppet
-  #include puppet::onetime
+  include puppet::onetime
   include monit
   include minecraft
   #monit::service { "puppet-agent": }
