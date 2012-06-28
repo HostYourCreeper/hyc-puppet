@@ -12,6 +12,7 @@ node /^hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   include hyc-api
   include ntp
   include puppet::daemon
+  include puppet::node
   include monit
   monit::service { "api": }
   monit::service { "puppet-agent": }
