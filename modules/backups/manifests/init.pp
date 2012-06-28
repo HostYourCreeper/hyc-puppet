@@ -13,4 +13,11 @@ class backups {
     rmdirs  => true,
   }
 
+  tidy { "/home/minecraft/minecraft/logs":
+    age     => "1w",
+    recurse => true,
+    matches => [ "*" ],
+    rmdirs  => false,
+  }
+
 }
