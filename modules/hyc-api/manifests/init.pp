@@ -36,7 +36,4 @@ class hyc-api {
       source  => 'puppet:///modules/hyc-api/create_image.sh',
       require => File['/opt/api'],
     } 
-    package { 'pwgen':
-      ensure => latest,
-    }
 }
