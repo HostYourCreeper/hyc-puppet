@@ -125,8 +125,8 @@ mc_world_backup() {
     do
         echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
         as_user "mkdir -p $BACKUPPATH"
-        path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
-        as_user "tar -hcjf $path $MCPATH/${WORLDNAME[$INDEX]}"
+        path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}_ .tar.gz .tar.gz`
+        as_user "cd $MCPATH && tar -hczf $path ${WORLDNAME[$INDEX]}"
     done
 }
 mc_update() {
@@ -166,9 +166,9 @@ mc_update() {
     fi
 }
 usage() {
-    echo "Usage: /etc/init.d/bukkit command"
-    echo "       bukkit command"
-    echo "       bk command"
+    echo "Usage: /etc/init.d/minecraft command"
+    echo "       minecraft command"
+    echo "       mc command"
     echo 
     echo "start - Starts the server"
     echo "stop - stops the server"
