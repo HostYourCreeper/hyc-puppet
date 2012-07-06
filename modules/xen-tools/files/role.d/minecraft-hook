@@ -1,0 +1,105 @@
+#!/bin/sh
+#
+#  Configure the new image to be a minimal image, by removing
+# packages I don't care about - and installing new ones I prefer.
+#
+# Steve
+# --
+# http://www.steve.org.uk/
+#
+
+prefix=$1
+PASSWORD=$2
+MEMORY=$3
+SHARED=$4
+#MAXMEM=$(($(echo $MEMORY | sed 's/M//') + $SHARED - 256))M
+MAXMEM=${MEMORY}M
+DOMU_IP=$5
+BACKUP=$6
+DB_PASSWORD=$7
+MURMUR_PASSWORD=$8
+SSH=$9
+
+#
+#  Source our common functions - this will let us install a Debian package.
+#
+if [ -e /usr/lib/xen-tools/common.sh ]; then
+    . /usr/lib/xen-tools/common.sh
+else
+    echo "Installation problem"
+fi
+
+if [ -e /etc/xen-tools/role.d/minecraft-tar ]; then
+    . /etc/xen-tools/role.d/minecraft-tar
+else
+    echo "Installation problem"
+fi
+
+logMessage Script $0 starting
+
+NUM=$(cat ${prefix}/etc/hostname | cut -d'm' -f 2)
+FQDN=server0${NUM}.$(hostname)
+sed -i "2 s/.*/10.10.10.${NUM} $FQDN $(cat ${prefix}/etc/hostname)/" ${prefix}/etc/hosts
+chroot ${prefix} hostname $FDQN
+echo "server=creeper.emilienkenler.com
+certname=$FQDN" >> ${prefix}/etc/puppet/puppet.conf
+
+chroot ${prefix} useradd -s /bin/bash -m -p ${PASSWORD} minecraft
+
+touch "${prefix}/etc/cron.deny"
+echo "minecraft" >> "${prefix}/etc/cron.deny"
+echo "*/5 * * * * root if [ -e /home/minecraft/minecraft/autostart ]; then /etc/init.d/minecraft start; fi" >> "${prefix}/etc/cron.d/minecraft"
+
+logMessage Installation des backups
+
+case "$BACKUP" in
+ 0) 
+ 	echo "0 6 * * 1 root /etc/init.d/minecraft backup" >> "${prefix}/etc/cron.d/minecraft"
+ ;;
+ 1) 
+ 	echo "0 6 * * * root /etc/init.d/minecraft backup" >> "${prefix}/etc/cron.d/minecraft"
+ ;;
+ 2)
+ 	echo "0 */6 * * * root /etc/init.d/minecraft backup" >> "${prefix}/etc/cron.d/minecraft"
+ ;;
+esac
+
+chroot ${prefix} /etc/init.d/mysql start
+echo "UPDATE mysql.user SET Password=PASSWORD('${DB_PASSWORD}') WHERE User='root';" | chroot ${prefix} mysql -uroot
+echo "FLUSH PRIVILEGES;" | chroot ${prefix} mysql -uroot
+chroot ${prefix} /etc/init.d/mysql stop
+
+mkdir -p "${prefix}/home/minecraft/www"
+touch "${prefix}/home/minecraft/www/index.html"
+chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft/www"
+
+cp -R /etc/xen-tools/minecraft.d/murmur-static_x86 "${prefix}/home/minecraft/murmur"
+chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft/murmur"
+chmod a+x "${prefix}/home/minecraft/murmur/murmur.x86"
+chmod a+x "${prefix}/home/minecraft/murmur/murmur.pl"
+chmod a+x "${prefix}/home/minecraft/murmur/weblist.pl"
+cp /etc/xen-tools/minecraft.d/murmur "${prefix}/etc/init.d/murmur"
+chmod a+x "${prefix}/etc/init.d/murmur"
+chroot ${prefix} insserv murmur
+chroot ${prefix} /home/minecraft/murmur/murmur.x86 -supw $MURMUR_PASSWORD
+
+sed -i '9,+4 s/^# //g' "${prefix}/root/.bashrc"
+sed -i '81,+2 s/^#//g' "${prefix}/home/minecraft/.bashrc"
+cp /etc/xen-tools/minecraft.d/bash_aliases "${prefix}/home/minecraft/.bash_aliases"
+echo /etc/xen-tools/minecraft.d/bash_aliases >> "${prefix}/root/.bash_aliases"
+
+cp /etc/xen-tools/minecraft.d/minecraft "${prefix}/etc/init.d/minecraft"
+chmod a+x "${prefix}/etc/init.d/minecraft"
+
+echo "MAXMEM=$MAXMEM" >> "${prefix}/etc/default/minecraft"
+echo "SERVICE_NAME=craftbukkit" >> "${prefix}/home/minecraft/.minecraft"
+
+chroot ${prefix} su - minecraft -c "/etc/init.d/minecraft install"
+chroot ${prefix} su - minecraft -c "/etc/init.d/minecraft autostart-on"
+
+chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft"
+
+puppet agent --onetime
+
+logMessage Script $0 ending
+

@@ -1,0 +1,78 @@
+#!/bin/sh
+#
+#  Configure the new image to be a minimal image, by removing
+# packages I don't care about - and installing new ones I prefer.
+#
+# Steve
+# --
+# http://www.steve.org.uk/
+#
+
+prefix=$1
+
+#
+#  Source our common functions - this will let us install a Debian package.
+#
+if [ -e /usr/lib/xen-tools/common.sh ]; then
+    . /usr/lib/xen-tools/common.sh
+else
+    echo "Installation problem"
+fi
+
+if [ -e /etc/xen-tools/role.d/minimal ]; then
+    . /etc/xen-tools/role.d/minimal
+else
+    echo "Installation problem"
+fi
+
+logMessage Script $0 starting
+
+installDebianPackage ${prefix} bzip2
+installDebianPackage ${prefix} zip
+installDebianPackage ${prefix} unzip
+installDebianPackage ${prefix} unrar-free
+installDebianPackage ${prefix} curl
+installDebianPackage ${prefix} man
+installDebianPackage ${prefix} rsync
+installDebianPackage ${prefix} locate
+installDebianPackage ${prefix} debconf-utils
+chroot ${prefix} debconf-set-selections <<\EOF
+sun-java6-bin shared/accepted-sun-dlj-v1-1 boolean true
+EOF
+installDebianPackage ${prefix} sun-java6-jre
+installDebianPackage ${prefix} htop
+installDebianPackage ${prefix} lsb-release 
+installDebianPackage ${prefix} puppet
+
+installDebianPackage ${prefix} vsftpd
+
+sed -i 's/anonymous_enable=YES/#anonymous_enable=YES/g' "${prefix}/etc/vsftpd.conf"
+sed -i 's/#local_enable=YES/local_enable=YES/g' "${prefix}/etc/vsftpd.conf"
+sed -i 's/#write_enable=YES/write_enable=YES/g' "${prefix}/etc/vsftpd.conf"
+sed -i 's/#chroot_local_user=YES/chroot_local_user=YES/g' "${prefix}/etc/vsftpd.conf"
+
+installDebianPackage ${prefix} apache2
+installDebianPackage ${prefix} php5
+installDebianPackage ${prefix} libapache2-mod-php5
+installDebianPackage ${prefix} libapache2-mod-rpaf
+installDebianPackage ${prefix} mysql-server
+installDebianPackage ${prefix} mysql-client
+installDebianPackage ${prefix} php5-mysql
+installDebianPackage ${prefix} phpmyadmin
+chroot ${prefix} ln -s /etc/phpmyadmin/apache.conf /etc/apache2/conf.d/phpmyadmin.conf
+
+cp /etc/xen-tools/minecraft.d/apache "${prefix}/etc/apache2/sites-available/minecraft"
+sed -i "s/127.0.0.1/10.10.10.1/g" "${prefix}/etc/apache2/mods-enabled/rpaf.conf"
+sed -i "s/www-data/minecraft/g" "${prefix}/etc/apache2/envvars"
+chroot ${prefix} a2enmod rewrite
+chroot ${prefix} a2dissite default
+chroot ${prefix} a2ensite minecraft
+
+mkdir -p "${prefix}/root/.ssh"
+touch "${prefix}/root/.ssh/authorized_keys2"
+cat /etc/xen-tools/key.d/*.pub > "${prefix}/root/.ssh/authorized_keys2"
+
+cp /etc/xen-tools/minecraft.d/motd "${prefix}/etc/motd.tail"
+
+logMessage Script $0 ending
+
