@@ -1,4 +1,4 @@
-class nagios-nrpe {
+class nagios {
 
   file { "/etc/nagios-plugins/config":
     mode    => "755",
