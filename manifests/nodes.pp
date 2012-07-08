@@ -17,6 +17,7 @@ node /^hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   monit::service { "api": }
   monit::service { "puppet-agent": }
   monit::service { "ntp": }
+  include nagios-nrpe
   include munin::client
   munin::plugin { df: }
   munin::plugin { df_abs: }
