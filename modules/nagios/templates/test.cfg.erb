@@ -1,0 +1,4 @@
+allowed_hosts=<% @ipaddress = "10.10.10.11"; $res = @ipaddress.split(/(\d+)/); $end = $res[7].to_i(10) + 127; puts $res[1] + "." + $res[3] + "." + $res[5] + "." + $end.to_s; %>
+
+command[check_all_disks]=/usr/lib/nagios/plugins/check_disk -w 20 -c 10
+command[check_total_procs]=/usr/lib/nagios/plugins/check_procs -w 250 -c 300

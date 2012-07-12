@@ -1,0 +1,16 @@
+# Convert the state string to the corresponding return code
+return_code=-1
+case "$2" in
+ UP)
+ return_code=0
+ ;;
+ DOWN)
+ return_code=1
+ ;;
+ UNREACHEBLE)
+ return_code=2
+ ;;
+esac
+# Send the service check results to the central monitoring server
+#$SubmitCmd "$1" $return_code "$3"
+/bin/echo -e "$1;;$return_code;;$3" | send_nsca 188.165.47.98 -c /etc/send_nsca.cfg -d ";;"

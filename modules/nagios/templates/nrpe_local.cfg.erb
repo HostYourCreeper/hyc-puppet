@@ -1,0 +1,9 @@
+<%
+   ip_numbers = ipaddress.split('.')
+   ip = ip_numbers[0...-1].join('.') + ".#{ip_numbers.last.to_i + 127}"
+%>
+
+allowed_hosts=<%= ip %>
+
+command[check_all_disks]=/usr/lib/nagios/plugins/check_disk -w 20 -c 10
+command[check_total_procs]=/usr/lib/nagios/plugins/check_procs -w 250 -c 300
