@@ -29,6 +29,12 @@ node /^hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   munin::plugin { memory: }
   munin::plugin { swap: }
 }
+
+node /^nginx.hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
+  include ntp
+  include puppet::daemon
+} 
+
 node /^server\d{3}\.hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   include ntp
   include murmur
@@ -38,15 +44,5 @@ node /^server\d{3}\.hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   include monit
   include minecraft
   include nagios::nrpe-vm
-  #monit::service { "puppet-agent": }
   monit::service { "ntp": }
-  #include munin::client
-  #munin::plugin { df: }
-  #munin::plugin { df_abs: }
-  #munin::plugin { netstat: }
-  #munin::plugin { processes: }
-  #munin::plugin { cpu: }
-  #munin::plugin { load: }
-  #munin::plugin { memory: }
-  #munin::plugin { swap: }
 }
