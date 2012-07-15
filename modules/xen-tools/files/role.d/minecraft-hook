@@ -11,14 +11,10 @@
 prefix=$1
 PASSWORD=$2
 MEMORY=$3
-SHARED=$4
-#MAXMEM=$(($(echo $MEMORY | sed 's/M//') + $SHARED - 256))M
-MAXMEM=${MEMORY}M
-DOMU_IP=$5
-BACKUP=$6
-DB_PASSWORD=$7
-MURMUR_PASSWORD=$8
-SSH=$9
+DOMU_IP=$4
+BACKUP=$5
+DB_PASSWORD=$6
+MURMUR_PASSWORD=$7
 
 #
 #  Source our common functions - this will let us install a Debian package.
@@ -29,11 +25,11 @@ else
     echo "Installation problem"
 fi
 
-if [ -e /etc/xen-tools/role.d/minecraft-tar ]; then
-    . /etc/xen-tools/role.d/minecraft-tar
-else
-    echo "Installation problem"
-fi
+#if [ -e /etc/xen-tools/role.d/minecraft-tar ]; then
+#    . /etc/xen-tools/role.d/minecraft-tar
+#else
+#    echo "Installation problem"
+#fi
 
 logMessage Script $0 starting
 
@@ -99,7 +95,7 @@ chroot ${prefix} su - minecraft -c "/etc/init.d/minecraft autostart-on"
 
 chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft"
 
-puppet agent --onetime
+puppetd --test
 
 logMessage Script $0 ending
 
