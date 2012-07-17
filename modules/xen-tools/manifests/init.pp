@@ -40,6 +40,12 @@ class xen-tools {
       source  => 'puppet:///modules/xen-tools/xen-tools.conf',
       require => Package['xen-tools'],
     }
+    file {'/etc/xen-tools/xm.tmpl':
+      ensure  => file,
+      mode    => 0644,
+      source  => 'puppet:///modules/xen-tools/xm.tmpl',
+      require => package['xen-tools'],
+    }
     file {'/etc/xen-tools/nginx.d':
       ensure  => directory,
       mode    => 0644,

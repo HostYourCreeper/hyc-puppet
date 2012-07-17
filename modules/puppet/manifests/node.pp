@@ -6,7 +6,7 @@ class puppet::node {
   }
   cron { 'puppet-update':
     ensure => present,
-    command => "/root/update.sh",
+    command => "bash /root/update.sh",
     user => root,
     hour => '*/6',
     minute => 0,
