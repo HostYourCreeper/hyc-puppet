@@ -70,7 +70,6 @@ chroot ${prefix} a2ensite minecraft
 
 mkdir -p "${prefix}/root/.ssh"
 touch "${prefix}/root/.ssh/authorized_keys2"
-cat /etc/xen-tools/key.d/*.pub > "${prefix}/root/.ssh/authorized_keys2"
 
 cp /etc/xen-tools/minecraft.d/motd "${prefix}/etc/motd.tail"
 
