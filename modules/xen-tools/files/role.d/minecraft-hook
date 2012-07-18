@@ -15,6 +15,7 @@ DOMU_IP=$4
 BACKUP=$5
 DB_PASSWORD=$6
 MURMUR_PASSWORD=$7
+SSD=$8
 
 #
 #  Source our common functions - this will let us install a Debian package.
@@ -94,6 +95,12 @@ echo "SERVICE_NAME=craftbukkit" >> "${prefix}/home/minecraft/.minecraft"
 
 chroot ${prefix} su - minecraft -c "/etc/init.d/minecraft install"
 chroot ${prefix} su - minecraft -c "/etc/init.d/minecraft autostart-on"
+
+if [ $SSD -gt 0 ]
+then
+  mkdir -p "${prefix}/home/minecraft/ssd"
+  echo "/dev/xvda3 /home/minecraft/ssd ext3 noatime,nodiratime,errors=remount-ro 0 0" >> ${prefix}/etc/fstab
+fi
 
 chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft"
 

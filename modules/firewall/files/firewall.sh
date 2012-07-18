@@ -3,6 +3,10 @@ DIR='/opt/firewall';
 RETVAL=0;
 
 IP=$(ifconfig eth0 | egrep -o 'inet adr:[[:alnum:]]*.[[:alnum:]]*.[[:alnum:]]*.[[:alnum:]]*' | awk -F: '{print $2}')
+if [[ -z $IP ]]
+then
+  IP=$(ifconfig eth0 | egrep -o 'inet addr:[[:alnum:]]*.[[:alnum:]]*.[[:alnum:]]*.[[:alnum:]]*' | awk -F: '{print $2}')
+fi
 
 start(){
 	
