@@ -117,16 +117,19 @@ get_worlds() {
       a=$a+1
     fi
   done
-  for NAME in $(ls $SSD)
-  do
-    if [ -d $SSD/$NAME ]
-    then
-      WORLDNAME[$a]=$NAME
-      WORLDRAM[$a]=false
-      WORLDSSD[$a]=true
-      a=$a+1
-    fi
-  done
+  if [ -d $SSD ]
+  then
+    for NAME in $(ls $SSD)
+    do
+      if [ -d $SSD/$NAME ]
+      then
+        WORLDNAME[$a]=$NAME
+        WORLDRAM[$a]=false
+        WORLDSSD[$a]=true
+        a=$a+1
+      fi
+    done
+  fi
 }
 
 initialize() {

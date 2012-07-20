@@ -53,4 +53,13 @@ class minecraft {
     purge  => false,
     require => File['/home/minecraft'],
   }
+
+  file { '/home/minecraft/worldstorage':
+    ensure => directory,
+    mode   => 0644,
+    owner  => minecraft,
+    group  => minecraft,
+    purge  => false,
+    require => File['/home/minecraft'],
+  }
 }
