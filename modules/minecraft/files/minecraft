@@ -1,278 +1,748 @@
 #!/bin/bash
-# /etc/init.d/bukkit
+# /etc/init.d/minecraft
 
 ### BEGIN INIT INFO
-# Provides:   bukkit
+# Provides:   minecraft
 # Required-Start: $local_fs $remote_fs
 # Required-Stop:  $local_fs $remote_fs
 # Should-Start:   $network
 # Should-Stop:    $network
 # Default-Start:  2 3 4 5
 # Default-Stop:   0 1 6
-# Short-Description:    Bukkit Server
-# Description:    Init script for minecraft/bukkit server. 
+# Short-Description:    Minecraft server
+# Description:    Init script for minecraft/bukkit server, with rolling logs and use of ramdisk for less lag. 
 ### END INIT INFO
 
-#############################
-######### SETTINGS ##########
-#############################
+# Created by Ahtenus
 
-source /home/minecraft/.minecraft
-source /etc/default/minecraft
+# Based on http://www.minecraftwiki.net/wiki/Server_startup_script
+# Support for multiworld by Benni-chan
+# Log rolls without needing restarts by Solorvox
 
-# Name of server.jar file
-SERVICE="$SERVICE_NAME.jar"
-# Name to use for the screen instance
-SCREEN="minecraft"
-# User that should run the server
-USERNAME="minecraft"
-# Path to minecraft directory 
-MCPATH="/home/${USERNAME}/minecraft"
-# Number of CPUs/cores to use
-CPU_COUNT=1
-# Initial memory usage
-INITMEM="64M"
-# Remember: give the ramdisk enough space, subtract from the total amount
-# of RAM available the size of your map and the RAM-consumption of your base system.
-INVOCATION="java -server -Xmx$MAXMEM -Xms$INITMEM -jar $SERVICE --server-ip=0.0.0.0 --port=25565 nogui"
-# Where the world backups should go
-BACKUPPATH="/home/${USERNAME}/world_backups"
-# Where the logs are copied with log-roll 
-LOGPATH="${MCPATH}/logs"
-# Where the whole minecraft directory is copied when whole-backup is executed
-WHOLEBACKUP="/home/${USERNAME}/server_backups"
-# folder names of the world
-WORLDNAME[1]="world"
-WORLDNAME[2]="world_nether"
-WORLDNAME[3]="world_the_end"
 
-ME=`whoami`
 as_user() {
-    if [ $ME == $USERNAME ] ; then
-        bash -c "$1"
-    else
-        su - $USERNAME -c "$1"
-    fi
-}
-datepath() {
-    # datepath path filending-to-check returned-filending
-    if [ -e $1`date +%F`$2 ]
-    then
-        echo $1`date +%FT%T`$3
-    else
-        echo $1`date +%F`$3
-    fi
-}
-mc_start() {
-    if ps ax | grep -v grep | grep -v -i SCREEN | grep java > /dev/null
-    then
-        echo "Tried to start but $SERVICE was already running!"
-    else
-        echo "$SERVICE was not running... starting."
-        cd $MCPATH
-        log_roll
-        as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
-        sleep 7
-        if ps ax | grep -v grep | grep -v -i SCREEN | grep java > /dev/null
-        then
-            echo "$SERVICE is now running."
-        else
-            echo "Could not start $SERVICE."
-        fi
-    fi
+  if [ $ME == $USERNAME ] ; then
+    bash -c "$1"
+  else
+    su $USERNAME -s /bin/bash -c "$1"
+  fi
 }
 
-mc_stop() {
-    if ps ax | grep -v grep | grep -v -i SCREEN | grep java > /dev/null
-    then
-        echo "$SERVICE is running... stopping."
-        as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
-        sleep 10
-        as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"stop\"\015'"
-        sleep 7
-    else
-        echo "$SERVICE was not running."
-    fi
-    if ps ax | grep -v grep | grep -v -i SCREEN | grep java > /dev/null
-    then
-        echo "$SERVICE could not be shut down... still running."
-    else
-        echo "$SERVICE is shut down."
-    fi
+change_ramdisk_state() {
+  if [ ! -e $WORLDSTORAGE/$1 ]
+  then
+    echo "World \"$1\" not found."
+    exit 1
+  fi
+  
+  if [ -e $WORLDSTORAGE/$1/ramdisk ]
+  then
+    rm $WORLDSTORAGE/$1/ramdisk
+    echo "removed ramdisk flag from \"$1\""
+  else
+    touch $WORLDSTORAGE/$1/ramdisk
+    echo "added ramdisk flag to \"$1\""
+  fi
+  echo "changes will only take effect after server is restarted."  
 }
+
+check_links() {
+  get_worlds
+  for INDEX in ${!WORLDNAME[@]}
+  do
+    if [[ -L $MCPATH/${WORLDNAME[$INDEX]} || ! -a $MCPATH/${WORLDNAME[$INDEX]} ]]
+    then
+      link=`ls -l $MCPATH/${WORLDNAME[$INDEX]} | awk '{print $11}'`
+      if ${WORLDRAM[$INDEX]}
+      then
+        if [ "$link" != "$RAMDISK/${WORLDNAME[$INDEX]}" ]
+        then
+          as_user "rm -f $MCPATH/${WORLDNAME[$INDEX]}"
+          as_user "ln -s $RAMDISK/${WORLDNAME[$INDEX]} $MCPATH/${WORLDNAME[$INDEX]}"
+          echo "Created link for ${WORLDNAME[$INDEX]}"
+        fi
+      elif ${WORLDSSD[$INDEX]}
+      then
+        if [ "$link" != "$SSD/${WORLDNAME[$INDEX]}" ]
+        then
+          as_user "rm -f $MCPATH/${WORLDNAME[$INDEX]}"
+          as_user "ln -s $SSD/${WORLDNAME[$INDEX]} $MCPATH/${WORLDNAME[$INDEX]}"
+          echo "Created link for ${WORLDNAME[$INDEX]}"
+        fi
+      else
+        if [ "$link" != "${WORLDSTORAGE}/${WORLDNAME[$INDEX]}" ]
+        then
+          as_user "rm -f $MCPATH/${WORLDNAME[$INDEX]}"
+          as_user "ln -s ${WORLDSTORAGE}/${WORLDNAME[$INDEX]} $MCPATH/${WORLDNAME[$INDEX]}"
+          echo "Created link for ${WORLDNAME[$INDEX]}"
+        fi
+      fi
+    else
+      echo "Could not process ${WORLDNAME[$INDEX]}. please move all worlds to ${WORLDSTORAGE}."
+      exit 1
+    fi
+  done
+}
+
+datepath() {
+  # datepath path filending-to-check returned-filending
+
+  # Returns an file path with added date between the filename and file ending.
+  # $1 filepath (not including file ending)
+  # $2 file ending to check for uniqueness
+  # $3 file ending to return
+
+  if [ -e $1`date +%F`$2 ]
+  then
+    echo $1`date +%FT%T`$3
+  else
+    echo $1`date +%F`$3
+  fi
+}
+
+get_worlds() {
+  a=1
+  for NAME in $(ls $WORLDSTORAGE)
+  do
+    if [ -d $WORLDSTORAGE/$NAME ]
+    then
+      WORLDNAME[$a]=$NAME
+      if [ -e $WORLDSTORAGE/$NAME/ramdisk ]
+      then
+        WORLDRAM[$a]=true
+      else
+        WORLDRAM[$a]=false
+      fi
+      WORLDSSD[$a]=false
+      a=$a+1
+    fi
+  done
+  for NAME in $(ls $SSD)
+  do
+    if [ -d $SSD/$NAME ]
+    then
+      WORLDNAME[$a]=$NAME
+      WORLDRAM[$a]=false
+      WORLDSSD[$a]=true
+      a=$a+1
+    fi
+  done
+}
+
+initialize() {
+  # Loads the config file
+  source /etc/minecraft.conf
+
+  if [ "$SERVICE" == "" ]
+  then
+    echo "Couldn't load config file, please edit config.example and rename it to config"
+    logger -t minecraft-init "Couldn't load config file, please edit config.example and rename it to config"
+    exit
+  fi
+  ME=`whoami`    # Sets $ME to equal the current user's username
+}
+
+is_running(){
+  # Checks for the minecraft servers screen session
+  # returns true if it exists.
+  if ps ax | grep -v grep | grep "$SCREEN $INVOCATION" > /dev/null
+  then
+    return 0
+  fi
+  return 1
+}
+
 log_roll() {
     if [ ! -d $LOGPATH ]; then
-        as_user "mkdir -p $LOGPATH"
+            as_user "mkdir -p $LOGPATH"
     fi
     path=`datepath $LOGPATH/server_ .log.gz .log`
     as_user "cp $MCPATH/server.log $path && gzip $path"
-    # only if previous command was successful
+  # only if previous command was successful
     if [ $? -eq 0 ]; then
-        # turnacate the existing log without restarting server
-        as_user "cp /dev/null $MCPATH/server.log"
-        as_user "echo \"Previous logs rolled to $path\" > $MCPATH/server.log "
+            # turnacate the existing log without restarting server
+            as_user "cp /dev/null $MCPATH/server.log"
+            as_user "echo \"Previous logs rolled to $path\" > $MCPATH/server.log "
     else    
-        echo "Failed to rotate logs to $LOGPATH/server_$path.log.gz"
+            echo "Failed to rotate logs to $LOGPATH/server_$path.log.gz"
     fi
 }
-mc_whole_backup() {
-    as_user "mkdir -p $WHOLEBACKUP"
-    path=`datepath $WHOLEBACKUP/minecraft_`
-    as_user "cp -r $MCPATH $path"
-}
-mc_world_backup() {
-    for INDEX in ${!WORLDNAME[@]}
-    do
-        echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
-        as_user "mkdir -p $BACKUPPATH"
-        path=`datepath $BACKUPPATH/${WORLDNAME[$INDEX]}_ .tar.gz .tar.gz`
-        as_user "cd $MCPATH && tar -hczf $path ${WORLDNAME[$INDEX]}"
-    done
-}
-mc_update() {
-    if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-    then
-        echo "$SERVICE is running! Will not start update."
-    else
-        if [[ -z $1 ]]
-        then
-            NAME=$(curl http://dl.hostyourcreeper.com/${SERVICE_NAME}/latest)
-        else
-            NAME=$1
-        fi
-        URL="http://dl.hostyourcreeper.com/${SERVICE_NAME}/${NAME}"
 
-        echo "Updating ${SERVICE_NAME} ..."
-        echo "Downloading ${URL} ..."
-        if [ -f $MCPATH/$NAME ]
-        then
-        	echo "This update is already downloaded."
-        else
-        	as_user "cd $MCPATH && wget -q $URL"
-        fi
-        if [ -f $MCPATH/$NAME ]
-        then
-            if `diff $MCPATH/${SERVICE} $MCPATH/${NAME} > /dev/null`
-            then
-                echo "You are already running this version of ${SERVICE_NAME}."
-            else
-                as_user "rm $MCPATH/$SERVICE"
-                as_user "ln -s $MCPATH/${NAME} $MCPATH/${SERVICE}"
-                echo "${SERVICE_NAME} successfully updated to ${NAME}."
-            fi
-        else
-            echo "${SERVICE_NAME} update could not be downloaded."
-        fi
+mc_saveoff() {
+  if is_running
+  then
+    echo "$SERVICE is running... suspending saves"
+    as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-off\"\015'"
+    as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
+    sync
+    sleep 10
+  else
+    echo "$SERVICE was not running. Not suspending saves."
+  fi
+}
+
+mc_saveon() {
+  if is_running
+  then
+    echo "$SERVICE is running... re-enabling saves"
+    as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-on\"\015'"
+  else
+    echo "$SERVICE was not running. Not resuming saves."
+  fi
+}
+
+mc_say() {
+  if is_running
+  then
+    echo "Said: $1"
+    as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say $1\"\015'"
+  else
+    echo "$SERVICE was not running. Not able to say anything."
+  fi
+}
+
+mc_start() {
+  cd $MCPATH
+  log_roll
+  as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
+  seconds=0
+  until ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+  do
+    sleep 1
+    seconds=$seconds+1
+    if [[ $seconds -eq 5 ]]
+    then
+      echo "Still not running, waiting a while longer..."
     fi
+    if [[ $seconds -ge 10 ]]
+    then
+      echo "Failed to start, aborting."
+      exit 1
+    fi
+  done  
+  echo "$SERVICE is running."
 }
-usage() {
-    echo "Usage: /etc/init.d/minecraft command"
-    echo "       minecraft command"
-    echo "       mc command"
-    echo 
-    echo "start - Starts the server"
-    echo "stop - stops the server"
-    echo "restart - restarts the server"
-    echo "autostart-on - Autostart the server when it is nor running"
-    echo "autostart-off - Disable autostart"
-    echo "backup - backups the worlds defined in the script"
-    echo "whole-backup - backups the entire server folder"
-    echo "install - install the latest version of ${SERVICE_NAME}"
-    echo "update - fetches the latest version of ${SERVICE_NAME}"
-    echo "log-roll - Moves and gzips the logfile"
-    echo "connected - lists connected users"
-    echo "status - Shows server status"
-    echo "version - returs Bukkit version"
-    echo
+
+mc_stop() {
+  # Stops the server
+  echo "Saving worlds..."
+  as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"save-all\"\015'"
+  sleep 10
+  echo "Stopping server..."
+  as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"stop\"\015'"
+  sleep 0.5  # Wait for the server to shut down
+  seconds=0
+  while ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+  do
+    sleep 1 
+    seconds=$seconds+1
+    if [[ $seconds -eq 5 ]]
+    then
+      echo "Still not shut down, waiting a while longer..."
+    fi
+    if [[ $seconds -ge 120 ]]
+    then
+      logger -t minecraft-init "Failed to shut down server, aborting."
+      echo "Failed to shut down, aborting."
+      exit 1
+    fi
+  done  
+  echo "$SERVICE is now shut down."
 }
+
+mc_update() {
+  if is_running
+  then
+    echo "$SERVICE is running! Will not start update."
+  else
+    case $SERVICE in
+      minecraft.jar)
+        # Update minecraft_server.jar
+        echo "Updating minecraft_server.jar...."
+        MC_SERVER_URL=`wget -q -O - http://www.minecraft.net/download | grep minecraft_server.jar\  | cut -d \" -f 6`
+        as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
+        if [ -f $MCPATH/minecraft_server.jar.update ]
+        then
+          if `diff $MCPATH/$SERVICE $MCPATH/minecraft_server.jar.update >/dev/null`
+          then
+            echo "You are already running the latest version of the Minecraft server."
+            as_user "rm $MCPATH/minecraft_server.jar.update"
+          else
+            as_user "mv $MCPATH/minecraft_server.jar.update $MCPATH/$SERVICE"
+            echo "Minecraft successfully updated."
+          fi
+        else
+          echo "Minecraft update could not be downloaded."
+        fi
+      ;;
+      craftbukkit.jar)
+        # Update craftbukkit.jar
+        echo "Updating craftbukkit...."
+        case $CB_RELEASE in
+          unstable|UNSTABLE|Unstable|dev|development)
+            CB_URL="http://dl.bukkit.org"
+            CB_DEV_URL="http://dl.bukkit.org/downloads/craftbukkit/list/dev/"
+            CB_SERVER_URL=$CB_URL`wget -q -O - $CB_DEV_URL | grep -m 1 .jar | cut -d \" -f 2`
+          ;;
+          hyc)
+            CB_SERVER_URL="http://dl.hostyourcreeper.com/craftbukkit/craftbukkit.jar"
+          ;;
+          *)
+            CB_SERVER_URL="http://cbukk.it/craftbukkit.jar"
+          ;;
+        esac
+        as_user "cd $MCPATH && wget -q -O $MCPATH/craftbukkit.jar.update $CB_SERVER_URL"
+        if [ -f $MCPATH/craftbukkit.jar.update ]
+        then
+          if `diff $MCPATH/$SERVICE $MCPATH/craftbukkit.jar.update > /dev/null`
+          then
+            echo "You are already running the latest version of CraftBukkit."
+            as_user "rm $MCPATH/craftbukkit.jar.update"
+          else
+            as_user "mv $MCPATH/craftbukkit.jar.update $MCPATH/$SERVICE"
+            echo "CraftBukkit successfully updated."
+          fi
+        else
+          echo "CraftBukkit update could not be downloaded."
+        fi
+      ;;
+      *)
+        echo "Can not update ${SERVICE}. You are running OpenMod."
+      ;;
+      esac
+  fi
+}
+
+mc_whole_backup() {
+  echo "backing up entire setup into $WHOLEBACKUP"
+  as_user "mkdir -p $WHOLEBACKUP"
+  path=`datepath $WHOLEBACKUP/mine_craft`
+  as_user "cp -rP $MCPATH $path"
+}
+
+mc_world_backup() {
+  #
+  # Backup the worlds and puts them in a folder for each day (unless $BACKUPSCRIPTCOMPATIBLE is set)
+  #
+
+  get_worlds
+  today="`date +%F`"
+  as_user "mkdir -p $BACKUPPATH"
+  # Check if the backupt script compatibility is enabled
+    if [ "$BACKUPSCRIPTCOMPATIBLE" ]
+    then
+      # If it is enabled, then delete the old backups to prevent errors
+      echo "Detected that backup script compatibility is enabled, deleting old backups that are not necessary."
+      as_user "rm -r $BACKUPPATH/*"
+    fi
+  for INDEX in ${!WORLDNAME[@]}
+  do
+    echo "Backing up minecraft world named \"${WORLDNAME[$INDEX]}\""
+    case "$BACKUPFORMAT" in
+     tgz)
+        if [ "$BACKUPSCRIPTCOMPATIBLE" ]
+        # If is set tars will be put in $BACKUPPATH without any timestamp to be compatible with
+        # [backup rotation script](https://github.com/adamfeuer/rotate-backups)
+        then
+          path=$BACKUPPATH/${WORLDNAME[$INDEX]}.tar.gz
+        else
+          as_user "mkdir -p $BACKUPPATH/${today}"
+          path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .tar.gz .tar.gz`
+        fi
+        as_user "cd $MCPATH && tar -hczf $path ${WORLDNAME[$INDEX]}"
+        ;;
+      tbz2)
+        if [ "$BACKUPSCRIPTCOMPATIBLE" ]
+        # If is set tars will be put in $BACKUPPATH without any timestamp to be compatible with
+        # [backup rotation script](https://github.com/adamfeuer/rotate-backups)
+        then
+          path=$BACKUPPATH/${WORLDNAME[$INDEX]}.tar.bz2
+        else
+          as_user "mkdir -p $BACKUPPATH/${today}"
+          path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .tar.bz2 .tar.bz2`
+        fi
+        as_user "cd $MCPATH && tar -hcjf $path ${WORLDNAME[$INDEX]}"
+        ;;
+      zip)
+        if [ "$BACKUPSCRIPTCOMPATIBLE" ]
+        then
+          path=$BACKUPPATH/${WORLDNAME[$INDEX]}.zip
+        else
+          as_user "mkdir -p $BACKUPPATH/${today}"
+          path=`datepath $BACKUPPATH/${today}/${WORLDNAME[$INDEX]}_ .zip .zip`
+        fi
+        as_user "cd $MCPATH && zip -rq $path ${WORLDNAME[$INDEX]}"
+        ;;
+      *)
+        echo "$BACKUPFORMAT is not a supported backup format"
+        ;;
+    esac
+  done
+}
+
+overviewer_copy_worlds() {
+  #
+  # Backup the worlds for overviewer
+  #
+
+  get_worlds
+  for INDEX in ${!WORLDNAME[@]}
+  do
+    echo "Copying minecraft ${WORLDNAME[$INDEX]}."
+    as_user "mkdir -p $OVBACKUP"
+    as_user "rsync -rt --delete $WORLDSTORAGE/${WORLDNAME[$INDEX]} $OVBACKUP/${WORLDNAME[$INDEX]}"
+  done
+}
+
+overviewer_start() {
+        if [ ! -e $OVPATH/overviewer.py ]
+        then
+                if [ ! "$OVPATH" == "apt" ]
+                then
+                        echo "Minecraft-Overviewer is not installed in \"$OVPATH\""
+                        exit 1
+                else
+                        echo "Using APT repository installed Minecraft-Overviewer"
+                fi
+        fi
+        if [ ! -e $OUTPUTMAP ]
+        then
+                as_user "mkdir -p $OUTPUTMAP"
+        fi
+        if [ -e $OVCONFIGPATH/$OVCONFIGNAME ]
+        then
+                echo "Start generating map with Minecraft-Overviewer..."
+                if [ "$OVPATH" == "apt" ]
+                then
+                        as_user "overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
+                else
+                        as_user "python $OVPATH/overviewer.py --config=$OVCONFIGPATH/$OVCONFIGNAME"
+                fi
+                echo "Map generated."
+        else
+                echo "No config file found. Start with default config..."
+                if [ -z $1 ] || [ ! -e $OVBACKUP/$1 ]
+                then
+                        echo "World \"$1\" not found."
+                else
+                        echo "Start generating map with Minecraft-Overviewer..."
+                        if [ "$OVPATH" == "apt" ]
+                        then
+                                as_user "nice overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
+                        else
+                                as_user "nice python $OVPATH/overviewer.py $OVBACKUP/$1 $OUTPUTMAP"
+                        fi
+                        echo "Map generated."
+                fi
+        fi
+}
+
+to_disk() {
+  get_worlds
+  for INDEX in ${!WORLDNAME[@]}
+  do
+    if ${WORLDRAM[$INDEX]}
+    then
+      as_user "rsync -rt --exclude 'ramdisk' $MCPATH/${WORLDNAME[$INDEX]}/ ${WORLDSTORAGE}/${WORLDNAME[$INDEX]}"
+      echo "${WORLDNAME[$INDEX]} copied to disk"
+    fi
+  done
+}
+
+to_ram() {
+  get_worlds
+  for INDEX in ${!WORLDNAME[@]}
+  do
+    if ${WORLDRAM[$INDEX]}
+    then
+      if [ -L $MCPATH/${WORLDNAME[$INDEX]} ]
+      then
+        as_user "rsync -rt --exclude 'ramdisk' ${WORLDSTORAGE}/${WORLDNAME[$INDEX]}/ $RAMDISK/${WORLDNAME[$INDEX]}"
+        echo "${WORLDNAME[$INDEX]} copied to ram"
+      fi
+    fi
+  done
+}
+
+initialize
 
 case "$1" in
-    start)
-        # Starts the server
+  backup)
+    # Backups world
+    if is_running; then
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backing up world.\"\015'"
+      mc_saveoff
+      to_disk
+      mc_world_backup
+      mc_saveon
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backup complete.\"\015'"
+    else
+      mc_world_backup
+    fi
+    ;;
+  connected)
+    # Lists connected users
+    if is_running; then
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff list\015'"
+      sleep 3s
+      tac $MCPATH/server.log | grep -m 1 "Connected"
+    else
+      echo "No running server."
+    fi
+    ;;
+  help|--help|-h)
+    echo "Usage: $0 command"
+    echo 
+    echo "Available commands:"
+    echo -e "   restart \t\t Restarts the server"
+    echo -e "   start \t\t Starts the server."
+    echo -e "   stop \t\t Stops the server."
+    echo -e "   restart \t\t Restarts the server."
+    echo -e "   backup \t\t Backups the worlds defined in the script."
+    echo -e "   whole-backup \t Backs up the entire server folder."
+    echo -e "   update \t\t Fetches the latest version of minecraft.jar server and Bukkit."
+    echo -e "   log-roll \t\t Moves and gzips the logfile."
+    echo -e "   to-disk \t\t Copies the worlds from the ramdisk to worldstorage."
+    echo -e "   save-off \t\t Flushes the world to disk and then disables saving."
+    echo -e "   save-on \t\t Re-enables saving if it was previously disabled by save-off."
+    echo -e "   say \t\t\t Prints the given string to the ingame chat."
+    echo -e "   connected \t\t Lists connected users."
+    echo -e "   screen \t\t Opens the minecraft server console."
+    echo -e "   status \t\t Displays server status."
+    echo -e "   version \t\t Displays Bukkit version and then exits."
+    echo -e "   links \t\t Creates nessesary symlinks."
+    echo -e "   last \t\t Displays recently connected users."
+    echo -e "   worlds \t\t Displays a list of available worlds."
+    echo -e "   ramdisk WORLD \t Toggles ramdisk configuration for WORLD."
+    echo -e "   overviewer [WORLD] \t Creates a map of the WORLD with Minecraft-Overviewer."
+    echo -e "   whitelist-add NAME \t Adds the specified player to the server whitelist."
+    echo -e "   whitelist-reload \t Reloads the whitelist."
+    ;;
+  last)
+    # Greps for recently logged in users
+    echo Recently logged in users:
+    cat $MCPATH/server.log | awk '/entity|conn/ {sub(/lost/,"disconnected");print $1,$2,$4,$5}'
+    ;;
+  links)
+    check_links
+    ;;
+  log-roll)
+    # Moves and Gzips the logfile
+    log_roll
+    ;;
+  overviewer)
+    if is_running; then
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Generating overviewer map.\"\015'"
+      mc_saveoff
+      to_disk
+      overviewer_copy_worlds
+      mc_saveon
+      overviewer_start $2
+    else
+      overviewer_copy_worlds
+      overviewer_start $2
+    fi
+    ;;
+  ramdisk)
+    change_ramdisk_state $2
+    ;;
+  restart)
+    # Restarts the server
+    if is_running; then
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS!\"\015'"
+      mc_stop
+      to_disk
+    else
+      echo "No running server, starting it..."
+    fi
+    check_links
+    to_ram
+    mc_start
+    ;;
+  save-off)
+    # Flushes the state of the world to disk, and then disables
+    # saving until save-on is called (useful if you have your own
+    # backup scripts).
+    if is_running; then
+      mc_saveoff
+    else
+      echo "Server was not running, syncing from ram anyway..."
+    fi
+    to_disk
+    ;;
+  save-on)
+    # Re-enables saving if it was disabled by save-off.
+    if is_running; then
+      mc_saveon
+    else
+      echo "No running server."
+    fi
+    ;;
+  say)
+    # Says something to the ingame chat
+    if is_running; then
+      mc_say "$2"
+    else
+      echo "No running server to say anything."
+    fi
+    ;;
+  screen)
+    if is_running; then
+      clear
+      screen -r minecraft
+    else
+    echo "Server is not running. Do you want to start it?"
+    echo "Please put \"Yes\", or \"No\": "
+    read START_SERVER
+    case "$START_SERVER" in
+      [Yy]|[Yy][Ee][Ss])
+        clear
+        check_links
+        to_ram
         mc_start
+        clear
+        screen -r minecraft
         ;;
-    stop)
-        # Stops the server
-        as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
-        mc_stop
-        ;;
-    autostart-on)
-        as_user "touch ${MCPATH}/autostart"
-        echo "${SERVICE_NAME}t autostart enabled."
-        ;;
-    autostart-off)
-        as_user "rm ${MCPATH}/autostart"
-        echo "${SERVICE_NAME} autostart disabled."
-        ;;
-    restart)
-        # Restarts the server
-        as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS.\"\015'"
-        mc_stop
-        mc_start
-        ;;
-    backup)
-        # Backups world
-        echo "Backing up worlds."
-        mc_world_backup
-        echo "Backup complete."
-        ;;
-    whole-backup)
-        # Backup everything
-        echo "Backing up everything."
-        mc_whole_backup
-        echo "Backup complete."
-        ;;
-    update)
-        as_user "screen -p 0 -S minecraft -X eval 'stuff \"say SERVER UPDATE IN 10 SECONDS.\"\015'"
-        mc_stop
-        mc_whole_backup
-        mc_update $2
-        mc_start
-        ;;
-    install)
-        as_user "mkdir -p ${MCPATH}"
-        as_user "mkdir -p ${BACKUPPATH}"
-        as_user "mkdir -p ${WHOLEBACKUP}"
-        mc_update
-        ;;
-    connected)
-        # Lists connected users
-        as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"list\"\015'"
-        sleep 3s
-        tac $MCPATH/server.log | grep -m 1 "Connected"
-        ;;
-    log-roll)
-        log_roll
-        ;;
-    status)
-        # Shows server status
-        if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
-        then
-            echo "$SERVICE is running."
-        else
-            echo "$SERVICE is not running."
-        fi
-        ;;
-    version)
-        if [ $SERVICE_NAME = "craftbukkit" ]
-        then
-            MC_VERSION=`grep INFO $MCPATH/server.log | awk '/CraftBukkit/ {sub(/\)/, ""); print $12 | "tail -n 1"}'`
-            BK_VERSION=`grep INFO $MCPATH/server.log |  awk '/CraftBukkit/ {sub(/\)/, ""); print $10 | "tail -n 1"}'`
-            echo "CraftBukkit version $BK_VERSION"
-            echo "Minecraft version $MC_VERSION"
-        elif [ $SERVICE_NAME = "minecraft_server" ]
-        then
-            MC_VERSION=`grep INFO $MCPATH/server.log | grep version | tail -n 1 | cut -d' ' -f8`
-            echo "Minecraft version $MC_VERSION"
-        fi
-        ;;
-    help)
-        usage
-        ;;
-    *)
-        usage
+      [Nn]|[Nn][Oo])
+        clear
+        echo "Aborting startup!"
+        sleep 1
+        clear
         exit 1
         ;;
+      *)
+        echo "Invalid input"
+        exit 1
+        ;;
+    esac
+    fi
+    ;;
+  start)
+    # Starts the server
+    if is_running; then
+      echo "Server already running."
+    else
+      check_links
+      to_ram
+      mc_start
+    fi
+    ;;
+  status)
+    # Shows server status
+    if is_running
+    then
+      echo "$SERVICE is running."
+    else
+      echo "$SERVICE is not running."
+    fi
+    ;;
+  stop)
+    # Stops the server
+    if is_running; then
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER SHUTTING DOWN!\"\015'"
+      mc_stop
+      to_disk
+    else
+      echo "No running server."
+    fi
+    ;;
+  to-disk)
+    # Writes from the ramdisk to disk, in case the server crashes. 
+    mc_saveoff
+    to_disk
+    mc_saveon
+    ;;
+  install)
+    as_user "mkdir -p ${MCPATH}"
+    as_user "mkdir -p ${BACKUPPATH}"
+    as_user "mkdir -p ${WHOLEBACKUP}"
+    as_user "mkdir -p ${LOGPATH}"
+    as_user "mkdir -p ${WORLDSTORAGE}"
+    as_user "mkdir -p ${WORLDSTORAGE}/world"
+    as_user "mkdir -p ${WORLDSTORAGE}/world_nether"
+    as_user "mkdir -p ${WORLDSTORAGE}/world_the_end"
+    mc_update
+  ;;
+  update)
+    #update minecraft_server.jar and craftbukkit.jar (thanks karrth)
+    if is_running; then
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER UPDATE IN 10 SECONDS.\"\015'"
+      mc_stop
+      to_disk
+      mc_whole_backup
+      mc_update
+      check_links
+      mc_start
+    else
+      mc_whole_backup
+      mc_update
+    fi
+    ;;
+  version)
+    if is_running; then
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"version\"\015'"
+      tac $MCPATH/server.log | grep -m 1 "This server is running"
+    else
+      echo "The server needs to be running to check version."
+    fi
+    ;;
+  whitelist-add)
+    # Adds a player to the whitelist
+    if is_running; then
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist add $2\"\015'"
+    else
+      echo "No running server."
+    fi
+    ;;
+  whitelist-reload)
+    # Reloads the whitelist
+    if is_running; then
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"whitelist reload\"\015'"
+    else
+      echo "No running server."
+    fi
+    ;;
+  whole-backup)
+        # Backup everything
+    if is_running; then
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say COMPLETE SERVER BACKUP IN 10 SECONDS.\"\015'"
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say WARNING: WILL RESTART SERVER SOFTWARE!\"\015'"
+      mc_stop
+      to_disk
+      mc_whole_backup
+      check_links
+      mc_start
+    else
+      mc_whole_backup
+    fi
+    ;;
+  save-off)
+    # Flushes the state of the world to disk, and then disables
+    # saving until save-on is called (useful if you have your own
+    # backup scripts).
+    if is_running; then
+      mc_saveoff
+    else
+      echo "Server was not running, syncing from ram anyway..."
+    fi
+    to_disk
+    ;;
+  worlds)
+    get_worlds
+    for INDEX in ${!WORLDNAME[@]}
+    do
+      if ${WORLDRAM[$INDEX]}
+      then
+        echo "${WORLDNAME[$INDEX]} (ramdisk)"
+      else
+        echo ${WORLDNAME[$INDEX]}
+      fi
+    done
+    ;;
+  *)
+    echo "No such command, see $0 help"
+    exit 1
+    ;;
 esac
 
 exit 0

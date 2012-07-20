@@ -92,6 +92,8 @@ chmod a+x "${prefix}/etc/init.d/minecraft"
 
 echo "MAXMEM=${MEMORY}M" >> "${prefix}/etc/default/minecraft"
 echo "SERVICE_NAME=craftbukkit" >> "${prefix}/home/minecraft/.minecraft"
+echo "CB_RELEASE=hyc" >> "${prefix}/home/minecraft/.minecraft"
+
 
 chroot ${prefix} su - minecraft -c "/etc/init.d/minecraft install"
 chroot ${prefix} su - minecraft -c "/etc/init.d/minecraft autostart-on"

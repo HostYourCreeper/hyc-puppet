@@ -10,6 +10,14 @@ class minecraft {
     owner  => root,
     group  => root,
   }
+
+  file {'/etc/minecraft.conf':
+    ensure => file,
+    mode   => 0644,
+    source => 'puppet:///modules/minecraft/minecraft.conf',
+    owner  => root,
+    group  => root,
+  }
   
   file { '/home/minecraft':
     ensure => directory,
