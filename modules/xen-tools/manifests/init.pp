@@ -80,6 +80,12 @@ class xen-tools {
       mode    => 0644,
       require => File['/etc/xen-tools/minecraft.d'],
     }
+    file { '/etc/xen-tools/minecraft.d/minecraft.conf':
+      ensure  => file,
+      source  => 'puppet:///modules/minecraft/minecraft.conf',
+      mode    => 0644,
+      require => File['/etc/xen-tools/minecraft.d'],
+    }
     file {'/etc/xen-tools/role.d':
       ensure  => directory,
       mode    => 0755,

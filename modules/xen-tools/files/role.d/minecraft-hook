@@ -88,6 +88,7 @@ cp /etc/xen-tools/minecraft.d/bash_aliases "${prefix}/home/minecraft/.bash_alias
 echo /etc/xen-tools/minecraft.d/bash_aliases >> "${prefix}/root/.bash_aliases"
 
 cp /etc/xen-tools/minecraft.d/minecraft "${prefix}/etc/init.d/minecraft"
+cp /etc/xen-tools/minecraft.d/minecraft.conf "${prefix}/etc/minecraft.conf"
 chmod a+x "${prefix}/etc/init.d/minecraft"
 
 echo "MAXMEM=${MEMORY}M" >> "${prefix}/etc/default/minecraft"
