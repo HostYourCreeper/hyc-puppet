@@ -504,6 +504,8 @@ case "$1" in
     echo -e "   backup \t\t Backups the worlds defined in the script."
     echo -e "   whole-backup \t Backs up the entire server folder."
     echo -e "   update \t\t Fetches the latest version of minecraft.jar server and Bukkit."
+    echo -e "   autostart-on \t Autostart the server when it is nor running"
+    echo -e "   autostart-off \t Disable autostart"
     echo -e "   log-roll \t\t Moves and gzips the logfile."
     echo -e "   to-disk \t\t Copies the worlds from the ramdisk to worldstorage."
     echo -e "   save-off \t\t Flushes the world to disk and then disables saving."
@@ -532,6 +534,14 @@ case "$1" in
   log-roll)
     # Moves and Gzips the logfile
     log_roll
+    ;;
+  autostart-on)
+    as_user "touch ${MCPATH}/autostart"
+    echo "${SERVICE_NAME} autostart enabled."
+    ;;
+  autostart-off)
+    as_user "rm ${MCPATH}/autostart"
+    echo "${SERVICE_NAME} autostart disabled."
     ;;
   overviewer)
     if is_running; then
