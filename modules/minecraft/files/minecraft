@@ -259,7 +259,7 @@ mc_update() {
     echo "$SERVICE is running! Will not start update."
   else
     case $SERVICE in
-      minecraft.jar)
+      minecraft_server.jar|minecraft.jar)
         # Update minecraft_server.jar
         echo "Updating minecraft_server.jar...."
         MC_SERVER_URL=`wget -q -O - http://www.minecraft.net/download | grep minecraft_server.jar\  | cut -d \" -f 6`
