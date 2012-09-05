@@ -206,6 +206,10 @@ mc_say() {
 
 mc_start() {
   cd $MCPATH
+  if [ -f $MCPATH/$SERVICE ]
+  then
+    mc_update
+  fi
   log_roll
   as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
   seconds=0
