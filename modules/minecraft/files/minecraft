@@ -327,6 +327,7 @@ mc_update() {
         else
           echo "CraftYukkit update could not be downloaded."
         fi
+      ;;
       *)
         echo "Can not update ${SERVICE}. You are running OpenMod."
       ;;
