@@ -206,7 +206,7 @@ mc_say() {
 
 mc_start() {
   cd $MCPATH
-  if [ -f $MCPATH/$SERVICE ]
+  if [ ! -f $MCPATH/$SERVICE ]
   then
     mc_update
   fi
