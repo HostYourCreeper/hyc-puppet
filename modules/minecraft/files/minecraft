@@ -309,6 +309,24 @@ mc_update() {
           echo "CraftBukkit update could not be downloaded."
         fi
       ;;
+      craftYukkit.jar|craftyukkit.jar)
+        # Update craftYukkit.jar
+        echo "Updating craftYukkit.jar...."
+        CY_SERVER_URL="http://dev.yukkit.fr/latest/craftYukkit.jar"
+        as_user "cd $MCPATH && wget -q -O $MCPATH/craftYukkit.jar.update $CY_SERVER_URL"
+        if [ -f $MCPATH/craftYukkit.jar.update ]
+        then
+          if `diff $MCPATH/$SERVICE $MCPATH/craftYukkit.jar.update >/dev/null`
+          then
+            echo "You are already running the latest version of the Minecraft server."
+            as_user "rm $MCPATH/craftYukkit.jar.update"
+          else
+            as_user "mv $MCPATH/craftYukkit.jar.update $MCPATH/$SERVICE"
+            echo "CraftYukkit successfully updated."
+          fi
+        else
+          echo "CraftYukkit update could not be downloaded."
+        fi
       *)
         echo "Can not update ${SERVICE}. You are running OpenMod."
       ;;
