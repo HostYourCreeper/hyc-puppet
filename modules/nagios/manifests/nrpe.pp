@@ -14,10 +14,21 @@ class nagios::nrpe {
   package { "nagios-plugins": 
     ensure => latest,
   }
+  package { "libnagios-plugin-perl":
+    ensure => latest,
+  }
 
   service { "nagios-nrpe-server":
     ensure    => running,
     enable    => true,
     pattern   => "nrpe",
+  }
+
+  file { "/usr/lib/nagios/plugins/check_mem":
+    ensure  => file,
+    require => Package['libnagios-plugin-perl'],
+    mode    => "755",
+    source  => "puppet:///modules/nagios/check_mem",
+    notify  => Service['nagios-nrpe-server'],
   }
 }
