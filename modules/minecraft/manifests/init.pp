@@ -65,10 +65,11 @@ class minecraft {
 
   file { '/var/www/api':
     ensure => directory,
-    mode   => 0755,
+    mode   => 0644,
+    recurse => true,
     owner  => root,
     group  => root,
-    source => 'puppet:///modules/minecraft/hyc-vm/',
+    source => 'puppet:///modules/minecraft/hyc-vm',
   }
 
   service { "apache2":
@@ -82,7 +83,6 @@ class minecraft {
   file {'/etc/apache2/conf.d/api.conf':
     ensure => file,
     mode   => 0644,
-    recurse => true,
     source => 'puppet:///modules/minecraft/api.conf',
     owner  => root,
     group  => root,
