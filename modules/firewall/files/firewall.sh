@@ -37,9 +37,7 @@ start(){
     # Minequery 256XX -> 25566
     #iptables -t nat -A PREROUTING -i eth0 -p tcp -m tcp --dport 256${NUM} -j DNAT --to-destination 10.10.10.${NUM}:25566
     iptables -t nat -A PREROUTING -d ${IP}/32 -p tcp -m tcp --dport 256${NUM} -j DNAT --to-destination 10.10.10.${NUM}:25566
-    # Minequery 275XX -> 25575
-    iptables -t nat -A PREROUTING -d ${IP}/32 -p tcp -m tcp --dport 275${NUM} -j DNAT --to-destination 10.10.10.${NUM}:25575
-
+   
     # Rcon 275XX -> 25575
     iptables -t nat -A PREROUTING -d ${IP}/32 -p tcp -m tcp --dport 275${NUM} -j DNAT --to-destination 10.10.10.${NUM}:25575
 
