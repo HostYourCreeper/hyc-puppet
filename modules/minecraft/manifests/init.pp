@@ -82,6 +82,7 @@ class minecraft {
   file {'/etc/apache2/conf.d/api.conf':
     ensure => file,
     mode   => 0644,
+    recurse => true,
     source => 'puppet:///modules/minecraft/api.conf',
     owner  => root,
     group  => root,
