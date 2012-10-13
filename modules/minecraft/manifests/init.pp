@@ -62,4 +62,29 @@ class minecraft {
     purge  => false,
     require => File['/home/minecraft'],
   }
+
+  file { '/var/www/api':
+    ensure => directory,
+    mode   => 0755,
+    owner  => root,
+    group  => root,
+    source => 'puppet:///modules/minecraft/hyc-vm/',
+  }
+
+  service { "apache2":
+    ensure    => running,
+    enable    => true,
+    pattern   => "apache2",
+    hasrestart => true,
+    hasstatus => true,
+  }
+
+  file {'/etc/apache2/conf.d/api.conf':
+    ensure => file,
+    mode   => 0644,
+    source => 'puppet:///modules/minecraft/api.conf',
+    owner  => root,
+    group  => root,
+    notify => Service['apache2']
+  }
 }
