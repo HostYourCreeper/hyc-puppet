@@ -1,4 +1,4 @@
-class nagios::nrpe-node inherits nrpe {
+class nagios::nrpe-node inherits nagios::nrpe {
 
   file {'/etc/nagios/nrpe_local.cfg':
       ensure => file,
