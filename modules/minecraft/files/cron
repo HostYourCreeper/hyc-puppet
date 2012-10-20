@@ -1,0 +1,2 @@
+*/5 * * * * root if [ -e /home/minecraft/minecraft/autostart ]; then /etc/init.d/minecraft start; fi
+0 6 * * * root /etc/init.d/minecraft backup
