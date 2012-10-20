@@ -114,4 +114,12 @@ class minecraft {
     group  => root,
     notify => Service['apache2']
   }
+
+  file {'/etc/cron.d/minecraft':
+    ensure => file,
+    mode   => 0644,
+    source => 'puppet:///modules/minecraft/cron',
+    owner  => root,
+    group  => root
+  }
 }
