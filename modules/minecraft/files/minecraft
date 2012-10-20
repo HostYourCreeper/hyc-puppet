@@ -566,7 +566,7 @@ case "$1" in
   restart)
     # Restarts the server
     if is_running; then
-      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER REBOOT IN 10 SECONDS!\"\015'"
+      as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say ${MSG_REBOOT}\"\015'"
       mc_stop
       to_disk
     else

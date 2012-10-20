@@ -48,7 +48,6 @@ chroot ${prefix} useradd -s /bin/bash -m -p ${PASSWORD} minecraft
 touch "${prefix}/etc/cron.deny"
 echo "minecraft" >> "${prefix}/etc/cron.deny"
 echo "*/5 * * * * root if [ -e /home/minecraft/minecraft/autostart ]; then /etc/init.d/minecraft start; fi" >> "${prefix}/etc/cron.d/minecraft"
-
 echo "0 6 * * * root /etc/init.d/minecraft backup" >> "${prefix}/etc/cron.d/minecraft"
 
 chroot ${prefix} /etc/init.d/mysql start
@@ -82,6 +81,7 @@ chmod a+x "${prefix}/etc/init.d/minecraft"
 echo "MAXMEM=${MEMORY}M" >> "${prefix}/etc/default/minecraft"
 echo "SERVICE_NAME=craftbukkit" >> "${prefix}/home/minecraft/.minecraft"
 echo "MSG_STOP='SERVER SHUTTING DOWN!'" >> "${prefix}/home/minecraft/.minecraft"
+echo "MSG_REBOOT='SERVER REBOOT IN 10 SECONDS!'" >> "${prefix}/home/minecraft/.minecraft"
 echo "CB_RELEASE=hyc" >> "${prefix}/home/minecraft/.minecraft"
 
 
