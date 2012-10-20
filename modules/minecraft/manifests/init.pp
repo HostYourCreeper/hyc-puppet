@@ -1,6 +1,32 @@
 class minecraft {
-  package { 'sun-java6-jre':
+  #package { 'sun-java6-jre':
+  #  ensure => latest,
+  #}
+
+  file {'/etc/apt/sources.list.d/webupd8team-java.list':
+    ensure => file,
+    mode   => 0644,
+    source => 'puppet:///modules/minecraft/java.list',
+    owner  => root,
+    group  => root,
+  }
+
+  exec {'apt-key':
+    command =>  '/usr/bin/apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886',
+    require => File['/etc/apt/sources.list.d/webupd8team-java.list']
+  }
+  exec {'apt update':
+    command => '/usr/bin/apt-get update',
+    require => Exec['apt-key']
+  }
+
+  exec {'license':
+    command => '/bin/echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections',
+    require => Exec['apt update']
+  }
+  package { 'oracle-java7-installer':
     ensure => latest,
+    require => Exec['license']
   }
 
   file {'/etc/init.d/minecraft':
