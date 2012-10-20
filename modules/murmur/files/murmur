@@ -1,3 +1,5 @@
+#!/bin/bash
+# /etc/init.d/murmur
 ### BEGIN INIT INFO
 # Provides: Murmur Server Installation
 # Required-Start: $local_fs $network
@@ -7,8 +9,7 @@
 # Short-Description: Voice Chat Service
 # Description: Murmur is an open source Voice Chat Server for Gamers
 ### END INIT INFO
-#! /bin/sh
-# /etc/init.d/murmur
+
 MURMURDIR=/home/minecraft/murmur
 MURMURBIN=$MURMURDIR/murmur.x86
 MURMURINI=$MURMURDIR/murmur.ini
