@@ -1,2 +1,3 @@
 */5 * * * * root if [ -e /home/minecraft/minecraft/autostart ]; then /etc/init.d/minecraft start; fi
 0 6 * * * root /etc/init.d/minecraft backup
+30 6 * * * root find /home/minecraft/world_backups/* -maxdepth 0 -mtime +8 -exec rm -R {} \;
