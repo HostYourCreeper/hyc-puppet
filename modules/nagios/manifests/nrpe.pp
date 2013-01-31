@@ -24,11 +24,11 @@ class nagios::nrpe {
     pattern   => "nrpe",
   }
 
-  file { "/usr/lib/nagios/plugins/check_mem":
+  file { "/usr/lib/nagios/plugins/check_mem.pl":
     ensure  => file,
     require => Package['libnagios-plugin-perl'],
     mode    => "755",
-    source  => "puppet:///modules/nagios/check_mem",
+    source  => "puppet:///modules/nagios/check_mem.pl",
     notify  => Service['nagios-nrpe-server'],
   }
 }
