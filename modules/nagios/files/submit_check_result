@@ -24,4 +24,4 @@ esac
 # pipe the service check info into the send_nsca program, which
 # in turn transmits the data to the nsca daemon on the central
 # monitoring server
-/bin/echo -e "$1\t$2\t$return_code\t$4\n" | send_nsca 188.165.47.98 -c /etc/send_nsca.cfg
+/bin/echo -e "$1\t$2\t$return_code\t$4\n" | send_nsca nagios.hostyourcreeper.net -c /etc/send_nsca.cfg

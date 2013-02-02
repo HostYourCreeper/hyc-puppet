@@ -13,4 +13,4 @@ case "$2" in
 esac
 # Send the service check results to the central monitoring server
 #$SubmitCmd "$1" $return_code "$3"
-/bin/echo -e "$1;;$return_code;;$3" | send_nsca 188.165.47.98 -c /etc/send_nsca.cfg -d ";;"
+/bin/echo -e "$1;;$return_code;;$3" | send_nsca nagios.hostyourcreeper.net -c /etc/send_nsca.cfg -d ";;"
