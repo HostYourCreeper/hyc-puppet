@@ -55,6 +55,8 @@ sed -i 's/#chroot_local_user=YES/chroot_local_user=YES/g' "${prefix}/etc/vsftpd.
 
 installDebianPackage ${prefix} apache2
 installDebianPackage ${prefix} php5
+installDebianPackage ${prefix} php5-curl
+installDebianPackage ${prefix} php5-apc
 installDebianPackage ${prefix} libapache2-mod-php5
 installDebianPackage ${prefix} libapache2-mod-rpaf
 installDebianPackage ${prefix} mysql-server
@@ -67,6 +69,8 @@ cp /etc/xen-tools/minecraft.d/apache "${prefix}/etc/apache2/sites-available/mine
 sed -i "s/127.0.0.1/10.10.10.1/g" "${prefix}/etc/apache2/mods-enabled/rpaf.conf"
 sed -i "s/www-data/minecraft/g" "${prefix}/etc/apache2/envvars"
 chroot ${prefix} a2enmod rewrite
+chroot ${prefix} a2enmod headers
+chroot ${prefix} a2enmod rpaf
 chroot ${prefix} a2dissite default
 chroot ${prefix} a2ensite minecraft
 
