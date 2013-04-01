@@ -211,6 +211,7 @@ mc_start() {
     mc_update
   fi
   log_roll
+  as_user "sed -i -e 's/\(autosave:\) 0$/\1 18000/g' $MCPATH/bukkit.yml"
   as_user "cd $MCPATH && screen -dmS $SCREEN $INVOCATION"
   seconds=0
   until ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
@@ -266,7 +267,7 @@ mc_update() {
       minecraft_server.jar|minecraft.jar)
         # Update minecraft_server.jar
         echo "Updating minecraft_server.jar...."
-        MC_SERVER_URL=`wget -q -O - http://www.minecraft.net/download | grep minecraft_server.jar\  | cut -d \" -f 6`
+        MC_SERVER_URL=`https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar`
         as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
         if [ -f $MCPATH/minecraft_server.jar.update ]
         then
@@ -285,19 +286,7 @@ mc_update() {
       craftbukkit.jar)
         # Update craftbukkit.jar
         echo "Updating craftbukkit...."
-        case $CB_RELEASE in
-          unstable|UNSTABLE|Unstable|dev|development)
-            CB_URL="http://dl.bukkit.org"
-            CB_DEV_URL="http://dl.bukkit.org/downloads/craftbukkit/list/dev/"
-            CB_SERVER_URL=$CB_URL`wget -q -O - $CB_DEV_URL | grep -m 1 .jar | cut -d \" -f 2`
-          ;;
-          hyc)
-            CB_SERVER_URL="http://dl.hostyourcreeper.com/craftbukkit/craftbukkit.jar"
-          ;;
-          *)
-            CB_SERVER_URL="http://cbukk.it/craftbukkit.jar"
-          ;;
-        esac
+        CB_SERVER_URL="http://dl.hostyourcreeper.com/craftbukkit/craftbukkit.jar"
         as_user "cd $MCPATH && wget -q -O $MCPATH/craftbukkit.jar.update $CB_SERVER_URL"
         if [ -f $MCPATH/craftbukkit.jar.update ]
         then
@@ -311,6 +300,25 @@ mc_update() {
           fi
         else
           echo "CraftBukkit update could not be downloaded."
+        fi
+      ;;
+      spigot.jar)
+        # Update spigot.jar
+        echo "Updating Spigot...."
+        CB_SERVER_URL="http://dl.hostyourcreeper.com/spigot/spigot.jar"
+        as_user "cd $MCPATH && wget -q -O $MCPATH/spigot.jar.update $CB_SERVER_URL"
+        if [ -f $MCPATH/spigot.jar.update ]
+        then
+          if `diff $MCPATH/$SERVICE $MCPATH/spigot.jar.update > /dev/null`
+          then
+            echo "You are already running the latest version of Spigot."
+            as_user "rm $MCPATH/spigot.jar.update"
+          else
+            as_user "mv $MCPATH/spigot.jar.update $MCPATH/$SERVICE"
+            echo "Spigot successfully updated."
+          fi
+        else
+          echo "Spigot update could not be downloaded."
         fi
       ;;
       *)
