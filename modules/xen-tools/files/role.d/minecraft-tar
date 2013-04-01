@@ -40,7 +40,7 @@ echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" > ${pre
 echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" >> ${prefix}/etc/apt/sources.list.d/webupd8team-java.list
 chroot ${prefix} apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
 chroot ${prefix} apt-get update
-chroot ${prefix} echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
+chroot ${prefix} "echo 'oracle-java7-installer shared/accepted-oracle-license-v1-1 select true' | /usr/bin/debconf-set-selections"
 installDebianPackage ${prefix} oracle-java7-installer
 installDebianPackage ${prefix} htop
 installDebianPackage ${prefix} lsb-release 
