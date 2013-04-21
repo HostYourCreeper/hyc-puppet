@@ -1,7 +1,4 @@
 import "common"
-import "munin"
-
-$munin_cidr_allow = '188.165.47.98/32'
 
 node basenode {
   include ssh
@@ -19,15 +16,6 @@ node /^hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
   monit::service { "ntp": }
   include nagios::nrpe-node
   include nagios::nsca
-  include munin::client
-  munin::plugin { df: }
-  munin::plugin { df_abs: }
-  munin::plugin { netstat: }
-  munin::plugin { processes: }
-  munin::plugin { cpu: }
-  munin::plugin { load: }
-  munin::plugin { memory: }
-  munin::plugin { swap: }
 }
 
 node /^nginx.hyc\d{3}\.hostyourcreeper\.net$/ inherits basenode{
