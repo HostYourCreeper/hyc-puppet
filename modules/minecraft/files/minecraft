@@ -102,6 +102,19 @@ datepath() {
 
 get_worlds() {
   a=1
+  for NAME in $(ls $MCPATH)
+  do
+    if [ -d $MCPATH/$NAME ]
+    then
+      if [ -e $MCPATH/$NAME/level.dat ]
+      then
+        WORLDNAME[$a]=$NAME
+        WORLDRAM[$a]=false
+        WORLDSSD[$a]=false
+        a=$a+1
+      fi
+    fi
+  done
   for NAME in $(ls $WORLDSTORAGE)
   do
     if [ -d $WORLDSTORAGE/$NAME ]
