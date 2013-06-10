@@ -77,9 +77,6 @@ check_links() {
           echo "Created link for ${WORLDNAME[$INDEX]}"
         fi
       fi
-    else
-      echo "Could not process ${WORLDNAME[$INDEX]}. please move all worlds to ${WORLDSTORAGE}."
-      exit 1
     fi
   done
 }
@@ -104,7 +101,7 @@ get_worlds() {
   a=1
   for NAME in $(ls $MCPATH)
   do
-    if [ -d $MCPATH/$NAME ]
+    if [[ -d $MCPATH/$NAME && ! -h $MCPATH/$NAME ]]
     then
       if [ -e $MCPATH/$NAME/level.dat ]
       then
@@ -117,7 +114,7 @@ get_worlds() {
   done
   for NAME in $(ls $WORLDSTORAGE)
   do
-    if [ -d $WORLDSTORAGE/$NAME ]
+    if [[ -d $WORLDSTORAGE/$NAME && ! -h $WORLDSTORAGE/$NAME ]]
     then
       WORLDNAME[$a]=$NAME
       if [ -e $WORLDSTORAGE/$NAME/ramdisk ]
@@ -134,7 +131,7 @@ get_worlds() {
   then
     for NAME in $(ls $SSD)
     do
-      if [ -d $SSD/$NAME ]
+      if [[ -d $SSD/$NAME && ! -h $SSD/$NAME ]]
       then
         WORLDNAME[$a]=$NAME
         WORLDRAM[$a]=false
