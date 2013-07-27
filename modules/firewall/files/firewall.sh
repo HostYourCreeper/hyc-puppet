@@ -44,7 +44,8 @@ start(){
 
     # HTTP 80XX -> 80
     iptables -t nat -A PREROUTING -d ${IP}/32 -p tcp -m tcp --dport 80${NUM} -j DNAT --to-destination 10.10.10.${NUM}:80
-    iptables -t nat -A PREROUTING -s 91.236.239.44/32 -d ${IP}/32 -p tcp -m tcp --dport 81${NUM} -j DNAT --to-destination 10.10.10.${NUM}:81
+    iptables -t nat -A PREROUTING -s 91.121.47.233/32 -d ${IP}/32 -p tcp -m tcp --dport 81${NUM} -j DNAT --to-destination 10.10.10.${NUM}:81
+    iptables -t nat -A PREROUTING -s 10.10.0.0/16 -d ${IP}/32 -p tcp -m tcp --dport 81${NUM} -j DNAT --to-destination 10.10.10.${NUM}:81
 
     # Dynmap 123XX -> 8123
     #iptables -t nat -A PREROUTING -i eth0 -p tcp -m tcp --dport 123${NUM} -j DNAT --to-destination 10.10.10.${NUM}:8123

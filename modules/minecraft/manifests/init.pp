@@ -96,6 +96,7 @@ class minecraft {
     owner  => root,
     group  => root,
     source => 'puppet:///modules/minecraft/hyc-vm',
+    ignore => '.git',
   }
 
   service { "apache2":
