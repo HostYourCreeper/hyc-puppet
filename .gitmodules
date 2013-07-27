@@ -1,3 +1,3 @@
 [submodule "modules/minecraft/files/hyc-vm"]
 	path = modules/minecraft/files/hyc-vm
-	url = gitolite@git.emilienkenler.com:hyc-vm.git
+	url = https://git.emilienkenler.com/hostyourcreeper/hyc-vm.git

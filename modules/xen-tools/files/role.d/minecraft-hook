@@ -95,6 +95,9 @@ then
   echo "/dev/xvda3 /home/minecraft/ssd ext3 noatime,nodiratime,errors=remount-ro 0 0" >> ${prefix}/etc/fstab
 fi
 
+cp /etc/xen-tools/api.d/api.conf "${prefix}/etc/apache2/conf.d/api.conf"
+cp -R /etc/xen-tools/api.d/api "${prefix}/var/www/api"
+
 chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft"
 
 puppetd --test

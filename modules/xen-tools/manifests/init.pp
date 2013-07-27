@@ -94,4 +94,30 @@ class xen-tools {
       purge   => false,
       require => File['/etc/xen-tools/xen-tools.conf'],
     }
+
+    file {'/etc/xen-tools/api.d':
+      ensure  => directory,
+      mode    => 0644,
+      require => File['/etc/xen-tools/xen-tools.conf'],
+    }
+
+    file {'/etc/xen-tools/api.d/api.conf':
+      ensure => file,
+      mode   => 0644,
+      source => 'puppet:///modules/minecraft/api.conf',
+      owner  => root,
+      group  => root,
+      require => File['/etc/xen-tools/api.d']
+    }
+
+    file { '/etc/xen-tools/api.d/api':
+      ensure => directory,
+      mode   => 0644,
+      recurse => true,
+      owner  => root,
+      group  => root,
+      source => 'puppet:///modules/minecraft/hyc-vm',
+      ignore => '.git',
+      require => File['/etc/xen-tools/api.d']
+    }
 }
