@@ -1,6 +1,7 @@
 #! /bin/bash
 DIR='/opt/firewall';
 RETVAL=0;
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 IP=$(ifconfig eth0 | egrep -o 'inet adr:[[:alnum:]]*.[[:alnum:]]*.[[:alnum:]]*.[[:alnum:]]*' | awk -F: '{print $2}')
 if [[ -z $IP ]]
@@ -13,13 +14,17 @@ start(){
   modprobe -s nf_nat_ftp
   modprobe -s nf_conntrack_ftp
  
-  iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+  iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -j MASQUERADE
  
   iptables -I INPUT -i lo -j ACCEPT
   iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
   iptables -A INPUT -d ${IP}/32 -p tcp -m tcp --dport 22 -j ACCEPT
   iptables -A INPUT -d ${IP}/32 -p tcp -m tcp --dport 8124 -j ACCEPT
   iptables -A INPUT -d ${IP}/32 -p tcp -m tcp --dport 5666 -j ACCEPT
+
+  if [ -e /opt/firewall/extra.sh ]; then
+    /opt/firewall/extra.sh
+  fi
 
   ## Start Nginx VM ##
   # SSH
@@ -35,6 +40,7 @@ start(){
 
     # MC 255XX -> 25565
     iptables -t nat -A PREROUTING -d ${IP}/32 -p tcp -m tcp --dport 255${NUM} -j DNAT --to-destination 10.10.10.${NUM}:25565
+    iptables -t nat -A PREROUTING -d ${IP}/32 -p udp -m udp --dport 255${NUM} -j DNAT --to-destination 10.10.10.${NUM}:25565
 
     # Minequery 256XX -> 25566
     iptables -t nat -A PREROUTING -d ${IP}/32 -p tcp -m tcp --dport 256${NUM} -j DNAT --to-destination 10.10.10.${NUM}:25566
@@ -68,7 +74,7 @@ start(){
     fi
 
   done
-
+  iptables -A INPUT -p tcp -j DROP
   iptables -A INPUT -p udp -j DROP
 }
 stop(){

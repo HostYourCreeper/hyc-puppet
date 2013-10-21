@@ -51,14 +51,12 @@ class xen-tools {
       mode    => 0644,
       source  => 'puppet:///modules/xen-tools/nginx.d',
       recurse => true,
-      require => File['/etc/xen-tools/xen-tools.conf'],
     }
     file {'/etc/xen-tools/minecraft.d':
       ensure  => directory,
       mode    => 0644,
       source  => 'puppet:///modules/xen-tools/minecraft.d',
       recurse => true,
-      require => File['/etc/xen-tools/xen-tools.conf'],
     }
     file { '/etc/xen-tools/minecraft.d/murmur-static_x86':
       ensure  => directory,
@@ -92,13 +90,11 @@ class xen-tools {
       source  => 'puppet:///modules/xen-tools/role.d',
       recurse => true,
       purge   => false,
-      require => File['/etc/xen-tools/xen-tools.conf'],
     }
 
     file {'/etc/xen-tools/api.d':
       ensure  => directory,
       mode    => 0644,
-      require => File['/etc/xen-tools/xen-tools.conf'],
     }
 
     file {'/etc/xen-tools/api.d/api.conf':
