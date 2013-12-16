@@ -277,7 +277,7 @@ mc_update() {
       minecraft_server.jar|minecraft.jar)
         # Update minecraft_server.jar
         echo "Updating minecraft_server.jar...."
-        MC_SERVER_URL=`http://dl.hostyourcreeper.com/minecraft_server/minecraft_server.jar`
+        MC_SERVER_URL="http://dl.hostyourcreeper.com/minecraft_server/minecraft_server.jar"
         as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
         if [ -f $MCPATH/minecraft_server.jar.update ]
         then
@@ -341,7 +341,7 @@ mc_update() {
 mc_whole_backup() {
   echo "backing up entire setup into $WHOLEBACKUP"
   as_user "mkdir -p $WHOLEBACKUP"
-  path=`datepath $WHOLEBACKUP/mine_craft`
+  path=`datepath $WHOLEBACKUP/minecraft_`
   as_user "cp -rP $MCPATH $path"
 }
 

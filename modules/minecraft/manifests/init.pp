@@ -28,6 +28,12 @@ class minecraft {
     ensure => latest,
     require => Exec['license']
   }
+  package { 'ntpdate':
+    ensure => latest
+  }
+  package { 'php5-curl':
+    ensure => latest
+  }
 
   file {'/etc/init.d/minecraft':
     ensure => file,

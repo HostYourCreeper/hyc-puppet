@@ -109,6 +109,7 @@ installDebianPackage ${prefix} libapache2-mod-rpaf
 installDebianPackage ${prefix} mysql-server
 installDebianPackage ${prefix} mysql-client
 installDebianPackage ${prefix} php5-mysql
+installDebianPackage ${prefix} php5-curl
 chroot ${prefix} /etc/init.d/mysql start
 installDebianPackage ${prefix} phpmyadmin
 chroot ${prefix} ln -s /etc/phpmyadmin/apache.conf /etc/apache2/conf.d/phpmyadmin.conf

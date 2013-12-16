@@ -55,6 +55,8 @@ echo "UPDATE mysql.user SET Password=PASSWORD('${DB_PASSWORD}') WHERE User='root
 echo "FLUSH PRIVILEGES;" | chroot ${prefix} mysql -uroot
 chroot ${prefix} /etc/init.d/mysql stop
 
+installDebianPackage ${prefix} php5-curl
+
 mkdir -p "${prefix}/home/minecraft/www"
 touch "${prefix}/home/minecraft/www/index.html"
 chroot ${prefix} chown -R minecraft:minecraft "/home/minecraft/www"

@@ -5,6 +5,6 @@
 
 allowed_hosts=<%= ip %>
 
-command[check_all_disks]=/usr/lib/nagios/plugins/check_disk -w 20 -c 10 -p / -p /home/minecraft/ssd
+command[check_all_disks]=/usr/lib/nagios/plugins/check_disk -w 20 -c 10 -p /
 command[check_total_procs]=/usr/lib/nagios/plugins/check_procs -w 250 -c 300
 command[check_mem]=/usr/lib64/nagios/plugins/check_mem.pl -u -C -w 97 -c 99
