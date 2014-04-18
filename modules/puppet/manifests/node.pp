@@ -17,14 +17,14 @@ class puppet::node {
     minute => 0,
     require => File['/root/update.sh'],
   }
-  cron { 'puppet-backups':
-    ensure => present,
-    command => "bash /root/backups.sh >/dev/null 2>&1",
-    user => root,
-    hour => 6,
-    minute => 30,
-    require => File['/root/backups.sh'],
-  }
+#  cron { 'puppet-backups':
+#    ensure => present,
+#    command => "bash /root/backups.sh >/dev/null 2>&1",
+#    user => root,
+#    hour => 6,
+#    minute => 30,
+#    require => File['/root/backups.sh'],
+#  }
   file { '/root/.ssh/config':
     ensure => file,
     source => 'puppet:///modules/puppet/config',
