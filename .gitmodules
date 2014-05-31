@@ -1,0 +1,3 @@
+[submodule "modules/minecraft/files/hyc-vm"]
+	path = modules/minecraft/files/hyc-vm
+	url = https://github.com/HostYourCreeper/hyc-vm.git
