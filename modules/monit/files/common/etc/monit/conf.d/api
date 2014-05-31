@@ -1,7 +1,0 @@
-check api
-with pidfile /var/run/api.pid
-start program = "/etc/init.d/api start"
-stop program = "/etc/init.d/api stop"
-
-if failed port 8124 type tcp with timeout 10 seconds then restart
-if 3 restarts within 5 cycles then timeout
